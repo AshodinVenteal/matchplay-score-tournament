@@ -7,7 +7,9 @@ authors = [
     { name = "arborelia", email = "gh@arborelia.net" }
 ]
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "requests>=2.34.2",
+]
 
 [project.scripts]
 matchplay-score = "matchplay_score:main"
@@ -15,3 +17,10 @@ matchplay-score = "matchplay_score:main"
 [build-system]
 requires = ["uv_build>=0.12.11,<0.13.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "ruff",
+    "ipython",
+]
