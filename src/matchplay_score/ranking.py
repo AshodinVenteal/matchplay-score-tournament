@@ -30,6 +30,24 @@ def best_cards(tournament_id: int, use_cache: bool = True) -> list[Card]:
     return sorted(cards_by_player.values(), key=Card.computed_score, reverse=True)
 
 
+def player_cards(
+    tournament_id: int, player_name: str, use_cache: bool = True
+) -> list[Card]:
+    if use_cache:
+        tournament_data = get_tournament_data_cached(tournament_id)
+    else:
+        tournament_data = get_tournament_data(tournament_id)
+    card_data: list[dict] = get_cards(tournament_id)
+
+    tournament = parse_tournament(tournament_data)
+    player_cards: list[Card] = []
+    for card_item in card_data:
+        card: Card = parse_card(card_item, tournament)
+        if card.player_name == player_name:
+            player_cards.append(card)
+    return sorted(player_cards, key=Card.computed_score, reverse=True)
+
+
 def main():
     from pprint import pprint
 

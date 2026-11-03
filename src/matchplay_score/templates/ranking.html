@@ -26,7 +26,7 @@
         }
 
         .game-mid {
-            background-color: #6a6;
+            background-color: #8e8;
         }
 
         .game-new {
@@ -72,7 +72,11 @@
         {% for card in cards %}
         <tr class="card">
             <td class="rank">{{ loop.index }}</td>
-            <td class="player">{{ card.player_name }}</td>
+            <td class="player">
+                <a href="/player/{{ tournament_id }}/{{ card.player_name.replace(' ', '_') }}">
+                    {{ card.player_name }}
+                </a>
+            </td>
             <td class="card-score">{{ card.computed_score() | commafy }}</td>
             <td class="games">
                 {% if loop.index <= n_expanded %} <table class="games-expanded">

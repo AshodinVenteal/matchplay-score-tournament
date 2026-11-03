@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>{{ player }} - Player Cards</title>
+    <meta http-equiv="refresh" content="60">
+    <style>
+        body {
+            font-family: "Roboto", sans-serif;
+        }
+
+        .game-inline {
+            display: inline-block;
+            padding-left: 0.2em;
+            padding-right: 0.2em;
+        }
+
+        .game-cell {
+            padding-left: 0.5em;
+            padding-right: 0.5em;
+            min-width: 7em;
+        }
+
+        .game-old {
+            background-color: #ea6;
+        }
+
+        .game-mid {
+            background-color: #8e8;
+        }
+
+        .game-new {
+            background-color: #6ae;
+        }
+
+        .rank {
+            font-weight: bold;
+        }
+
+        .player {
+            padding-left: 0.5em;
+            padding-right: 0.5em;
+        }
+
+        .score {
+            padding-left: 0.5em;
+            text-align: right;
+        }
+
+        .card-score {
+            color: #a3a;
+            text-align: right;
+            font-weight: bold;
+            font-size: 120%;
+        }
+
+        .equals {
+            color: #a3a;
+        }
+
+        .computed-score {
+            color: #a3a;
+            text-align: right;
+        }
+
+        .warning {
+            color: #c33;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>{{ player }}</h1>
+
+    <p>
+        <a href="/ranking/{{ tournament_id }}">
+            Back to tournament ranking
+        </a>
+    </p>
+
+    <table class="player-cards">
+        {% for card in cards %}
+        <tr class="card">
+            <td class="rank">
+                {% if loop.index == 1 %}
+                Best Card
+                {% else %}
+                {{ loop.index }}
+                {% endif %}
+            </td>
+            <td class="card-score">
+                {% if card.is_valid() %}
+                {{ card.computed_score() | commafy }}
+                {% else %}
+                <span class="warning">Card is invalid - ask a TD</span>
+                {% endif %}
+            </td>
+            <td class="games">
+                {% if loop.index <= n_expanded %} <table class="games-expanded">
+                    {% for game in card.games %}
+        <tr class="game">
+            <td class="game-cell game-{{ game.era }}">{{ game.game_name }}</td>
+            <td class="score">{{ game.score | commafy }}</td>
+            <td class="multiplier">× {{ game.multiplier }}</td>
+            <td class="equals">=</td>
+            <td class="computed-score">{{ game.computed_score() | commafy }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    {% for game in card.games %}
+    <span class="game-inline game-{{ game.era }}">
+        {{ game.game_name }}
+    </span>{% if not loop.last %}, {% endif %}
+    {% endfor %}
+    {% endif %}
+    </td>
+    </tr>
+    {% endfor %}
+    </table>
+</body>
+
+</html>
