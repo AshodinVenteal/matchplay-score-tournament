@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Score Card tournaments</title>
+    <style>
+        body {
+            font-family: "Roboto", sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Choose a tournament</h1>
+    <ul>
+        {% for id, name in tournaments.items() %}
+        <li>
+            <a href="/ranking/{{id}}">{{name}}</a>
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+
+</html>

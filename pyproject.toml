@@ -27,3 +27,6 @@ dev = [
     "ruff",
     "ipython",
 ]
+
+[tool.vercel]
+entrypoint = "src.matchplay_score.web:app"
