@@ -1,3 +1,4 @@
+__package__ = "matchplay_score"
 from .tournament import Card, parse_tournament, parse_card, UNKNOWN
 from .matchplay_api import get_tournament_data_cached, get_tournament_data, get_cards
 
