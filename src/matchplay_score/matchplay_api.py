@@ -1,5 +1,6 @@
 import requests
 from functools import cache
+from cachetools import cached, TTLCache
 
 
 @cache
@@ -13,6 +14,7 @@ def get_tournament_data(tournament_id: int) -> dict:
     return response.json()["data"]
 
 
+@cached(TTLCache(10, ttl=60))
 def get_cards(tournament_id: int) -> list[dict]:
     url = f"https://api.matchplay.events/api/tournaments/{tournament_id}/cards"
     return get_paginated_data(url)
