@@ -157,7 +157,7 @@ ARENAS_API_RESPONSE = [
     },
     {
         "arenaId": 189859,
-        "name": "Iron Maiden: Legacy of the Beast",
+        "name": "Iron Maiden: Legacy of the Beast (Pro)",
         "status": "active",
         "opdbId": "G4dOQ-MyNbb",
         "categoryId": None,

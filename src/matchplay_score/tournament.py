@@ -67,7 +67,7 @@ ARENAS = [
         multiplier=0.35,
     ),
     Arena(
-        name="Iron Maiden: Legacy of the Beast",
+        name="Iron Maiden: Legacy of the Beast (Pro)",
         short_name="Iron Maiden",
         era="new",
         multiplier=0.33,
