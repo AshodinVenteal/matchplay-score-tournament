@@ -1,6 +1,9 @@
 from dataclasses import dataclass
+from collections import Counter
 
-# "arenas" means "pinball tables" in matchplay terminology.
+UNKNOWN = "[unknown player]"
+ERAS = ["old", "mid", "new"]
+MAX_PER_ERA = 2
 
 
 @dataclass
@@ -8,7 +11,11 @@ class Tournament:
     arenas_by_id: dict[int, Arena]
     players_by_id: dict[int, str]
 
+    def get_player(self, player_id: int):
+        return self.players_by_id.get(player_id, UNKNOWN)
 
+
+# "arena" means "pinball machine" in matchplay terminology.
 @dataclass
 class Arena:
     name: str
@@ -37,6 +44,10 @@ class Card:
 
     def computed_score(self) -> int:
         return sum(game.computed_score() for game in self.games)
+
+    def is_valid(self):
+        counts = Counter(game.era for game in self.games)
+        return all(counts[era] <= MAX_PER_ERA for era in ERAS)
 
 
 ARENAS = [
@@ -132,8 +143,8 @@ def parse_game(game: dict, tournament: Tournament):
     arena = tournament.arenas_by_id[arena_id]
     return SinglePlayerGame(
         arena_id=arena_id,
-        game_name=arena.name,
-        player_name=tournament.players_by_id.get(player_id, "[unknown player]"),
+        game_name=arena.short_name,
+        player_name=tournament.get_player(player_id),
         score=game["score"],
         multiplier=arena.multiplier,
         era=arena.era,
@@ -143,6 +154,6 @@ def parse_game(game: dict, tournament: Tournament):
 def parse_card(card: dict, tournament: Tournament) -> Card:
     player_id = card["playerId"]
     return Card(
-        player_name=tournament.players_by_id.get(player_id, "[unknown player]"),
+        player_name=tournament.get_player(player_id),
         games=[parse_game(game, tournament) for game in card["singlePlayerGames"]],
     )

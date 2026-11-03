@@ -1,4 +1,10 @@
 import requests
+from functools import cache
+
+
+@cache
+def get_tournament_data_cached(tournament_id: int) -> dict:
+    return get_tournament_data(tournament_id)
 
 
 def get_tournament_data(tournament_id: int) -> dict:
