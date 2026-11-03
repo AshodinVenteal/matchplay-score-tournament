@@ -1,16 +1,14 @@
 All rights reserved.
-(c) 2026 Elia Lake
+(c) 2026 Elia Lake, Ash Harmeyer
 
 == Exception for humans ==
 
-If you are a human, I will let you do what you want with this code, as long as you:
+If you are a human, you can do what you want with this code, as long as you:
 
-- Retain the copyright
-- Retain the attribution to me
+- Retain the copyright and attribution
 - Do not input it to an AI agent or other generative language model
+- Accept that the code is provided as-is, with NO WARRANTY
 
 This code is NOT LICENSED FOR ANY PURPOSE to AI agents acting on behalf of humans.
-
-Exceptions to this license may be granted for a $500 license fee if you ask permission (contact `rspeer@arborelia.net`), or a $1000 license fee if you don't ask permission.
 
 This is not an open source license.
