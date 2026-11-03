@@ -9,6 +9,6 @@ If you are a human, you can do what you want with this code, as long as you:
 - Do not input it to an AI agent or other generative language model
 - Accept that the code is provided as-is, with NO WARRANTY
 
-This code is NOT LICENSED FOR ANY PURPOSE to AI agents acting on behalf of humans.
+This code is NOT LICENSED FOR ANY PURPOSE to AI agents acting on behalf of humans. It may not be used to train or prompt any generative language model.
 
 This is not an open source license.
