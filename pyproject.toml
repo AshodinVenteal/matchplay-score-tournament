@@ -1,8 +1,9 @@
 [project]
 name = "matchplay-score"
-version = "0.1.0"
-description = "Add your description here"
+version = "1.0.0"
+description = "Code and Development for the Front End of the Scoring System for Tournaments that utilize card-based scoring"
 readme = "README.md"
+license-files = ["LICENSE.txt"]
 authors = [
     { name = "arborelia", email = "gh@arborelia.net" }
 ]
@@ -16,10 +17,19 @@ dependencies = [
 
 [project.scripts]
 matchplay-score = "matchplay_score:main"
+scorehigh = "matchplay_score:main"
+
+[project.urls]
+Homepage = "https://ashodinventeal.github.io/scorehigh/"
+Repository = "https://github.com/AshodinVenteal/scorehigh"
+Issues = "https://github.com/AshodinVenteal/scorehigh/issues"
 
 [build-system]
 requires = ["uv_build>=0.12.11,<0.13.0"]
 build-backend = "uv_build"
+
+[tool.uv.build-backend]
+source-include = ["tests/**", "tools/**", ".github/workflows/pages.yml", ".gitignore", "uv.lock", ".python-version"]
 
 [dependency-groups]
 dev = [
@@ -30,3 +40,10 @@ dev = [
 
 [tool.vercel]
 entrypoint = "src.matchplay_score.web:app"
+
+[tool.pytest.ini_options]
+addopts = "-m 'not integration'"
+markers = ["integration: reads the public Match Play API"]
+
+[tool.ruff.format]
+line-ending = "lf"

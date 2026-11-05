@@ -1,0 +1,22 @@
+{% macro game_banner(game=None, compact=False) -%}
+  {% if game %}
+    {% set era_name = {'old': 'Old', 'mid': 'Mid', 'new': 'New'}.get(game.era, game.era) %}
+    <span class="{% if compact %}machine-chip {% endif %}monitor-game-block era-{{ game.era }}" title="{{ era_name }} era">
+      <span class="monitor-game-name">{{ game.game_name }}</span>
+      <span class="monitor-era-tag">{{ era_name }}</span>
+    </span>
+  {% else %}
+    <span class="{% if compact %}machine-chip {% endif %}monitor-game-block game-slot-empty" role="img" aria-label="Unused game slot"></span>
+  {% endif %}
+{%- endmacro %}
+
+{% macro game_banners(card, compact=False) -%}
+  {% for game in card.games %}{{ game_banner(game, compact) }}{% endfor %}
+  {% for slot in range(card.games|length, card_game_limit) %}{{ game_banner(compact=compact) }}{% endfor %}
+{%- endmacro %}
+
+{% macro progress_header(card) -%}
+  {% if card.games|length < card_game_limit %}
+    <span class="card-progress card-progress-header">Card in progress</span>
+  {% endif %}
+{%- endmacro %}

@@ -1,9 +1,10 @@
-from dataclasses import dataclass
 from collections import Counter
+from dataclasses import dataclass
 
 UNKNOWN = "[unknown player]"
 ERAS = ["old", "mid", "new"]
 MAX_PER_ERA = 2
+CARD_GAME_LIMIT = MAX_PER_ERA * len(ERAS)
 
 
 @dataclass

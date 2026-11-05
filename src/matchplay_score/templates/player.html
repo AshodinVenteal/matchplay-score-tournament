@@ -1,123 +1,19 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-    <title>{{ player }} - Player Cards</title>
-    <meta http-equiv="refresh" content="60">
-    <style>
-        body {
-            font-family: "Roboto", sans-serif;
-        }
-
-        .game-inline {
-            display: inline-block;
-            padding-left: 0.2em;
-            padding-right: 0.2em;
-        }
-
-        .game-cell {
-            padding-left: 0.5em;
-            padding-right: 0.5em;
-            min-width: 7em;
-        }
-
-        .game-old {
-            background-color: #ea6;
-        }
-
-        .game-mid {
-            background-color: #8e8;
-        }
-
-        .game-new {
-            background-color: #6ae;
-        }
-
-        .rank {
-            font-weight: bold;
-        }
-
-        .player {
-            padding-left: 0.5em;
-            padding-right: 0.5em;
-        }
-
-        .score {
-            padding-left: 0.5em;
-            text-align: right;
-        }
-
-        .card-score {
-            color: #a3a;
-            text-align: right;
-            font-weight: bold;
-            font-size: 120%;
-        }
-
-        .equals {
-            color: #a3a;
-        }
-
-        .computed-score {
-            color: #a3a;
-            text-align: right;
-        }
-
-        .warning {
-            color: #c33;
-        }
-    </style>
-</head>
-
-<body>
-    <h1>{{ player }}</h1>
-
-    <p>
-        <a href="/ranking/{{ tournament_id }}">
-            Back to tournament ranking
-        </a>
-    </p>
-
-    <table class="player-cards">
-        {% for card in cards %}
-        <tr class="card">
-            <td class="rank">
-                {% if loop.index == 1 %}
-                Best Card
-                {% else %}
-                {{ loop.index }}
-                {% endif %}
-            </td>
-            <td class="card-score">
-                {% if card.is_valid() %}
-                {{ card.computed_score() | commafy }}
-                {% else %}
-                <span class="warning">Card is invalid - ask a TD</span>
-                {% endif %}
-            </td>
-            <td class="games">
-                {% if loop.index <= n_expanded %} <table class="games-expanded">
-                    {% for game in card.games %}
-        <tr class="game">
-            <td class="game-cell game-{{ game.era }}">{{ game.game_name }}</td>
-            <td class="score">{{ game.score | commafy }}</td>
-            <td class="multiplier">× {{ game.multiplier }}</td>
-            <td class="equals">=</td>
-            <td class="computed-score">{{ game.computed_score() | commafy }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-    {% else %}
-    {% for game in card.games %}
-    <span class="game-inline game-{{ game.era }}">
-        {{ game.game_name }}
-    </span>{% if not loop.last %}, {% endif %}
-    {% endfor %}
-    {% endif %}
-    </td>
-    </tr>
-    {% endfor %}
-    </table>
-</body>
-
-</html>
+{% extends "base.html" %}
+{% from "card.html" import breakdown %}
+{% block title %}{{ player_name }} · {{ title }} · ScoreHigh{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ url_for('render_ranking', tournament_id=tournament_id) }}">← Back to standings</a>
+<div class="section-heading"><div><p class="eyebrow">PLAYER CARDS</p><h2>{{ player_name }}</h2></div><div class="refresh-controls" data-refresh-controls hidden><button class="text-button" type="button" data-refresh>↻ Refresh</button><button class="text-button" type="button" data-auto aria-pressed="true">Auto: on</button></div></div>
+<div class="player-tracking" data-tracked-player="{{ player_name }}" data-tournament="{{ tournament_id }}">{% include "player_controls.html" %}</div>
+<div data-score-content>
+<div class="player-stats panel"><div><span>Tournament rank</span><strong>{{ '#' ~ rank if rank else 'Unranked' }}</strong></div><div><span>Best valid card</span><strong>{{ best_card.computed_score()|commafy if best_card else '—' }}</strong></div><div><span>Cards recorded</span><strong>{{ cards|length }}</strong></div></div>
+<div class="section-heading history-heading"><h3>Card history</h3><span class="muted">Highest total first</span></div>
+{% for card in cards %}
+<article class="panel history-card {% if not card.is_valid() %}invalid-card{% endif %}" data-card-key="{{ card|card_key }}"><div class="history-card-heading"><div><h3>Card {{ loop.index }}</h3><span class="card-label">{% if not card.is_valid() %}Excluded from standings{% elif card == best_card %}Best valid card{% else %}Valid card{% endif %} · {{ card.games|length }} games</span></div><strong class="history-total">{{ card.computed_score()|commafy }}</strong></div>
+{% if not card.is_valid() %}<p class="invalid-notice"><strong>Invalid card — ask a tournament director.</strong> More than {{ max_per_era }} games from one era. This total does not count toward your rank.</p>{% endif %}
+<details class="card-details" {% if card == best_card or not card.is_valid() %}open{% endif %}><summary><span>Machine scores &amp; multipliers</span><span class="chevron" aria-hidden="true">⌄</span></summary>{{ breakdown(card) }}</details></article>
+{% endfor %}
+</div>
+<p class="update-status" data-refresh-status role="status" data-updated-at="{{ updated_at }}" {% if static_snapshot %}data-static-snapshot="true"{% endif %}>Snapshot: {{ updated_at }} · checks every 60s.</p>
+{% include "rules.html" %}
+{% endblock %}

@@ -1,0 +1,1015 @@
+/* Event display, podium, pagination, and viewport sizing. */
+
+html[data-monitor=true] .breakdown-toggle {
+  display: none;
+}
+
+html[data-monitor=true] .player-game-banners {
+  display: none !important;
+}
+
+html[data-monitor=true] .scoreboard {
+  transition: opacity 300ms ease-in-out;
+}
+
+html[data-monitor=true] .scoreboard.monitor-fading {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion:reduce) {
+  html[data-monitor=true] .scoreboard {
+    transition: none;
+  }
+
+}
+
+html[data-monitor=true] body {
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+html[data-monitor=true] .masthead {
+  display: none !important;
+}
+
+html[data-monitor=true] .utility-bar {
+  display: none !important;
+}
+
+html[data-monitor=true] .tabs {
+  display: none !important;
+}
+
+html[data-monitor=true] .site-footer {
+  display: none !important;
+}
+
+html[data-monitor=true] .sidebar {
+  display: none !important;
+}
+
+html[data-monitor=true] .portal-directory {
+  display: none !important;
+}
+
+html[data-monitor=true] .tracking-toolbar {
+  display: none !important;
+}
+
+html[data-monitor=true] .search-toolbar {
+  display: none !important;
+}
+
+html[data-monitor=true] .section-description {
+  display: none !important;
+}
+
+html[data-monitor=true] .format-panel {
+  display: none !important;
+}
+
+html[data-monitor=true] .refresh-controls {
+  display: none !important;
+}
+
+html[data-monitor=true] .player-controls {
+  display: none !important;
+}
+
+html[data-monitor=true] .card-details {
+  display: none !important;
+}
+
+html[data-monitor=true] .scoreboard-footer {
+  display: none !important;
+}
+
+html[data-monitor=true] .site-shell {
+  width: 100%;
+  max-width: none;
+  height: 100dvh;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 48px;
+  border: 0;
+  background: none;
+}
+
+html[data-monitor=true] .tournament-heading {
+  padding: 0 0 16px;
+  flex-shrink: 0;
+  max-width: calc(100% - 650px);
+}
+
+html[data-monitor=true] .tournament-heading h1 {
+  font-size: 38px;
+}
+
+html[data-monitor=true] .heading-icon {
+  font-size: 32px;
+}
+
+html[data-monitor=true] main {
+  padding: 0;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+html[data-monitor=true] .monitor-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: absolute;
+  right: 48px;
+  top: 24px;
+}
+
+html[data-monitor=true] .monitor-tools .framed-button {
+  font-size: 13px;
+  min-height: 40px;
+}
+
+html[data-monitor=true] .workspace {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+html[data-monitor=true] .standings-section {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+}
+
+html[data-monitor=true] .section-heading {
+  padding-bottom: 12px;
+}
+
+html[data-monitor=true] .section-heading .eyebrow {
+  display: none;
+}
+
+html[data-monitor=true] .section-heading h2 {
+  font-size: 22px;
+  color: var(--muted);
+}
+
+html[data-monitor=true] .scoreboard {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+}
+
+html[data-monitor=true] .score-column-head {
+  font-size: 18px;
+  padding: 14px 32px;
+  flex-shrink: 0;
+}
+
+html[data-monitor=true] .ranking-list {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+html[data-monitor=true] .ranking-entry {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+html[data-monitor=true] .ranking-entry.screen-page-hidden {
+  display: none !important;
+}
+
+html[data-monitor=true] .ranking-entry .ranking-row {
+  width: 100%;
+  display: grid;
+  min-height: 0;
+}
+
+html[data-monitor=true] .rank {
+  margin: 0;
+  align-self: center;
+  grid-row: auto;
+}
+
+html[data-monitor=true] .ranking-entry .player-info {
+  padding: 0;
+  min-width: 0;
+  min-height: 0;
+}
+
+html[data-monitor=true] .player-info>a {
+  line-height: 1.2;
+  min-height: 0;
+  color: var(--ink);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+html[data-monitor=true] .player-info>span {
+  display: none;
+}
+
+html[data-monitor=true] .ranking-entry .score-info {
+  grid-column: auto;
+  display: block;
+  text-align: right;
+}
+
+html[data-monitor=true] .ranking-entry .score-info>strong {
+  font-family: "ScoreHigh Digits","Cascadia Mono",Consolas,monospace;
+}
+
+html[data-monitor=true] .update-status {
+  font-size: 16px;
+  margin: 12px 0 0;
+}
+
+@media (max-width:1100px) {
+  html[data-monitor=true] .site-shell {
+    padding: 20px;
+  }
+
+  html[data-monitor=true] .monitor-tools {
+    position: static;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+
+  html[data-monitor=true] .tournament-heading {
+    max-width: none;
+  }
+
+  html[data-monitor=true] .tournament-heading h1 {
+    font-size: 26px;
+  }
+
+  html[data-monitor=true] .ranking-entry .ranking-row {
+    grid-template-columns: 40px minmax(0,1fr) auto;
+    gap: 12px;
+    padding: 8px 16px;
+  }
+
+  html[data-monitor=true] .player-info>a {
+    font-size: 26px;
+  }
+
+  html[data-monitor=true] .ranking-entry .score-info>strong {
+    font-size: 32px !important;
+  }
+
+}
+
+html[data-monitor=true] .monitor-podium {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 16px;
+  padding: 14px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+
+html[data-monitor=true] .monitor-podium[hidden] {
+  display: none;
+}
+
+.podium-card {
+  border: 1px solid var(--line);
+  border-top: 2px solid var(--pride-blue);
+  border-radius: 5px;
+  background: var(--paper);
+  padding: 16px 14px;
+  min-width: 0;
+}
+
+.podium-card:nth-child(2) {
+  border-top-color: var(--pride-pink);
+}
+
+.podium-card>header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 80px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.podium-card>header>div {
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.podium-rank {
+  color: var(--muted);
+  font-size: 20px;
+}
+
+.podium-total {
+  font: 700 40px/1.35 "ScoreHigh Digits",Consolas,monospace;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.podium-columns {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.podium-game {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 12ch;
+  align-items: center;
+  gap: 12px;
+  min-height: 65px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line);
+  font: 600 21px/1.4 "Cascadia Mono",Consolas,monospace;
+}
+
+.podium-game:last-child {
+  border-bottom: 0;
+}
+
+.podium-game>div {
+  display: grid;
+  grid-template-columns: 132px minmax(0,1fr);
+  align-items: center;
+  min-width: 0;
+}
+
+.podium-game .monitor-game-block {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.podium-game small {
+  font: 18px/1.4 "Cascadia Mono",Consolas,monospace;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.podium-game-points {
+  font: 600 21px/1.4 "Cascadia Mono",Consolas,monospace;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.podium-calculation {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 7ch;
+  gap: 8px;
+  align-items: center;
+}
+
+.podium-raw {
+  text-align: right;
+}
+
+.podium-multiplier {
+  text-align: left;
+}
+
+html[data-monitor=true] .ranking-entry {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+}
+
+html[data-monitor=true] .ranking-entry .ranking-row {
+  grid-template-columns: 55px minmax(0,1fr) auto;
+  padding: 2px 24px;
+  gap: 18px;
+}
+
+html[data-monitor=true] .rank {
+  font-size: 28px;
+}
+
+html[data-monitor=true] .player-info>a {
+  font-size: 32px;
+}
+
+html[data-monitor=true] .ranking-entry .score-info>strong {
+  font-size: 42px !important;
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+
+html[data-monitor=true] .monitor-games {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  padding: 0 24px 4px 97px;
+  color: var(--muted);
+  font: 16px/1.4 system-ui,sans-serif;
+}
+
+@media (min-width:1600px) {
+  html[data-monitor=true] .monitor-finalists .score-column-head {
+    font-size: 16px;
+    padding: 6px 32px;
+  }
+
+  html[data-monitor=true] .monitor-finalists .ranking-list {
+    gap: 4px;
+    padding: 4px 8px;
+  }
+
+  html[data-monitor=true] .monitor-finalists .ranking-entry {
+    display: grid;
+    grid-template-columns: 55px minmax(190px,1fr) auto auto;
+    gap: 18px;
+    align-items: center;
+    padding: 3px 24px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--paper);
+  }
+
+  html[data-monitor=true] .monitor-finalists .ranking-entry .score-info>strong {
+    font-size: 38px !important;
+  }
+
+  html[data-monitor=true] .monitor-finalists .ranking-row {
+    display: contents;
+  }
+
+  html[data-monitor=true] .monitor-finalists .rank {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  html[data-monitor=true] .monitor-finalists .player-info {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  html[data-monitor=true] .monitor-finalists .score-info {
+    grid-column: 4;
+    grid-row: 1;
+    padding: 0 8px;
+  }
+
+  html[data-monitor=true] .monitor-finalists .monitor-games {
+    grid-column: 3;
+    grid-row: 1;
+    padding: 0;
+    flex-wrap: nowrap;
+  }
+
+}
+
+html[data-monitor=true] .monitor-era-legend {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+  align-items: center;
+}
+
+html[data-monitor=true] .monitor-era-legend .era {
+  font: 600 14px/1.4 system-ui,sans-serif;
+  padding: 4px 10px;
+}
+
+.podium-game>div {
+  gap: 10px;
+}
+
+@media (max-width:1400px) {
+  .podium-card>header>div {
+    font-size: 20px;
+  }
+
+  .podium-total {
+    font-size: 28px;
+  }
+
+  .podium-game .monitor-game-block {
+    font-size: 15px;
+  }
+
+  .podium-game small {
+    font-size: 12px;
+  }
+
+  .podium-game-points {
+    font-size: 16px;
+  }
+
+}
+
+@media (min-width:1000px) {
+  html[data-monitor=true] {
+    --monitor-block-width: clamp(72px,7vw,132px);
+  }
+
+  html[data-monitor=true] .site-shell {
+    padding: clamp(12px,2.2vh,24px) clamp(16px,2.5vw,48px);
+  }
+
+  html[data-monitor=true] .monitor-tools {
+    top: clamp(12px,2.2vh,24px);
+    right: clamp(16px,2.5vw,48px);
+  }
+
+  html[data-monitor=true] .tournament-heading h1 {
+    font-size: clamp(24px,3.5vh,38px);
+  }
+
+  html[data-monitor=true] .monitor-podium {
+    flex: 0 0 63%;
+    min-height: 0;
+    padding: clamp(6px,1.3vh,14px);
+    gap: clamp(8px,.85vw,16px);
+  }
+
+  html[data-monitor=true] .podium-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: clamp(8px,1.5vh,16px) clamp(8px,.75vw,14px);
+  }
+
+  html[data-monitor=true] .podium-card>header {
+    display: grid;
+    min-height: 0;
+    gap: 8px;
+    flex: 0 0 auto;
+  }
+
+  html[data-monitor=true] .podium-card>header>div {
+    min-width: 0;
+    gap: 6px;
+    font-size: clamp(16px,1.4vw,28px);
+  }
+
+  html[data-monitor=true] .podium-rank {
+    font-size: clamp(13px,1.05vw,20px);
+  }
+
+  html[data-monitor=true] .podium-columns {
+    font-size: clamp(10px,.65vw,12px);
+    padding: 5px 0 3px;
+    flex-shrink: 0;
+  }
+
+  html[data-monitor=true] .podium-game {
+    min-height: 0;
+    flex: 1;
+    gap: clamp(6px,.65vw,12px);
+    padding: 3px 0;
+    font-size: clamp(12px,1.1vw,21px);
+  }
+
+  html[data-monitor=true] .podium-game>div {
+    grid-template-columns: var(--monitor-block-width) minmax(0,1fr);
+    gap: clamp(5px,.52vw,10px);
+  }
+
+  html[data-monitor=true] .podium-game .monitor-game-block {
+    font-size: clamp(11px,.9vw,17px);
+  }
+
+  html[data-monitor=true] .podium-game small {
+    font-size: clamp(10px,.94vw,18px);
+  }
+
+  html[data-monitor=true] .podium-calculation {
+    gap: clamp(4px,.42vw,8px);
+  }
+
+  html[data-monitor=true] .podium-game-points {
+    font-size: clamp(12px,1.1vw,21px);
+  }
+
+  html[data-monitor=true] .monitor-game-block {
+    width: var(--monitor-block-width);
+    min-height: clamp(27px,4.1vh,44px);
+    padding: 0 4px;
+  }
+
+  html[data-monitor=true] .monitor-game-name {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  html[data-monitor=true] .monitor-era-tag {
+    font-size: 7px;
+    right: 3px;
+    bottom: 1px;
+  }
+
+  html[data-monitor=true] .player-info>a {
+    font-size: clamp(20px,1.7vw,32px);
+  }
+
+  html[data-monitor=true] .monitor-games {
+    font-size: clamp(10px,.9vw,16px);
+  }
+
+  html[data-monitor=true] .monitor-finalists .ranking-row {
+    display: contents;
+  }
+
+  html[data-monitor=true] .monitor-finalists .rank {
+    grid-column: 1;
+    grid-row: 1;
+    font-size: clamp(20px,1.5vw,28px);
+  }
+
+  html[data-monitor=true] .monitor-finalists .player-info {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  html[data-monitor=true] .monitor-finalists .ranking-entry .score-info>strong {
+    font-size: clamp(26px,3.5vh,38px) !important;
+  }
+
+  html[data-monitor=true] .update-status {
+    font-size: clamp(11px,1.48vh,16px);
+    margin-top: 8px;
+  }
+
+}
+
+@media (min-width:1000px) and (max-height:1000px) {
+  html[data-monitor=true] .tournament-heading {
+    padding-bottom: 10px;
+  }
+
+  html[data-monitor=true] .monitor-tools {
+    gap: 6px;
+  }
+
+  html[data-monitor=true] .monitor-tools .framed-button {
+    font-size: 11px;
+    min-height: 32px;
+    padding: 6px 8px;
+  }
+
+  html[data-monitor=true] .section-heading {
+    padding-bottom: 8px;
+  }
+
+  html[data-monitor=true] .section-heading h2 {
+    font-size: 18px;
+  }
+
+}
+
+@media (min-width:1000px) and (max-height:800px) {
+  html[data-monitor=true] .podium-card>header {
+    padding-bottom: 4px;
+  }
+
+  html[data-monitor=true] .monitor-era-legend .era {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+
+  html[data-monitor=true] .tournament-heading {
+    max-width: calc(100% - 550px);
+  }
+
+  html[data-monitor=true] .monitor-finalists .ranking-list {
+    gap: 3px;
+    padding: 3px 6px;
+  }
+
+}
+
+@media (min-width:1000px) {
+  html[data-monitor=true] {
+    --monitor-row-columns: clamp(28px,3vw,55px) minmax(120px,1fr) minmax(0,2.8fr) minmax(150px,.9fr);
+    --monitor-row-inset: clamp(8px,1.25vw,24px);
+  }
+
+  html[data-monitor=true] .ranking-list {
+    gap: 4px;
+    padding: 4px 8px;
+  }
+
+  html[data-monitor=true] .monitor-finalists .ranking-list {
+    gap: 4px;
+    padding: 4px 8px;
+  }
+
+  html[data-monitor=true] .ranking-entry {
+    display: grid;
+    grid-template-columns: var(--monitor-row-columns);
+    gap: var(--monitor-row-gap);
+    align-items: center;
+    padding: 3px var(--monitor-row-inset);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--paper);
+  }
+
+  html[data-monitor=true] .monitor-finalists .ranking-entry {
+    display: grid;
+    grid-template-columns: var(--monitor-row-columns);
+    gap: var(--monitor-row-gap);
+    align-items: center;
+    padding: 3px var(--monitor-row-inset);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--paper);
+  }
+
+  html[data-monitor=true] .ranking-row {
+    display: contents !important;
+  }
+
+  html[data-monitor=true] .rank {
+    grid-column: 1;
+    grid-row: 1;
+    font-size: clamp(20px,1.5vw,28px);
+  }
+
+  html[data-monitor=true] .player-info {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  html[data-monitor=true] .score-info {
+    grid-column: 4;
+    grid-row: 1;
+    padding: 0;
+    min-width: 0;
+    text-align: right;
+  }
+
+  html[data-monitor=true] .monitor-finalists .score-info {
+    grid-column: 4;
+    grid-row: 1;
+    padding: 0;
+    min-width: 0;
+    text-align: right;
+  }
+
+  html[data-monitor=true] .ranking-entry .score-info>strong {
+    font-size: clamp(24px,min(2.5vw,4.45vh),48px) !important;
+  }
+
+  html[data-monitor=true] .monitor-games {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: nowrap;
+    min-width: 0;
+    padding: 0 clamp(6px,.75vw,14px);
+    border-left: 1px solid var(--strong-line);
+    border-right: 1px solid var(--strong-line);
+  }
+
+  html[data-monitor=true] .monitor-finalists .monitor-games {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: nowrap;
+    min-width: 0;
+    padding: 0 clamp(6px,.75vw,14px);
+    border-left: 1px solid var(--strong-line);
+    border-right: 1px solid var(--strong-line);
+  }
+
+  html[data-monitor=true] .monitor-games .monitor-game-block {
+    flex: 0 1 var(--monitor-block-width);
+    min-width: 0;
+  }
+
+  html[data-monitor=true] .score-column-head {
+    display: grid;
+    grid-template-columns: var(--monitor-row-columns);
+    column-gap: var(--monitor-row-gap);
+    align-items: center;
+    padding: 5px calc(var(--monitor-row-inset) + 9px);
+    font-size: clamp(12px,1.48vh,16px);
+  }
+
+  html[data-monitor=true] .monitor-finalists .score-column-head {
+    display: grid;
+    grid-template-columns: var(--monitor-row-columns);
+    column-gap: var(--monitor-row-gap);
+    align-items: center;
+    padding: 5px calc(var(--monitor-row-inset) + 9px);
+    font-size: clamp(12px,1.48vh,16px);
+  }
+
+  html[data-monitor=true] .score-column-head>span:first-child {
+    grid-column: 1/3;
+    grid-row: 1;
+  }
+
+  html[data-monitor=true] .score-column-head>span:nth-child(2) {
+    grid-column: 4;
+    grid-row: 1;
+    text-align: right;
+  }
+
+  html[data-monitor=true] .score-column-head>.monitor-games-heading {
+    display: block;
+    grid-column: 3;
+    grid-row: 1;
+    text-align: center;
+  }
+
+}
+
+@media (min-width:1000px) {
+  html[data-monitor=true] {
+    --monitor-row-gap: clamp(8px,1.04vw,20px);
+    --score-clearance: clamp(20px,2.5vw,48px);
+  }
+
+  html[data-monitor=true] .monitor-games {
+    position: relative;
+    gap: 6px;
+    padding-inline: clamp(8px,1vw,20px);
+    margin-right: var(--score-clearance);
+    border-left-color: transparent;
+    border-right-color: transparent;
+  }
+
+  html[data-monitor=true] .monitor-finalists .monitor-games {
+    position: relative;
+    gap: 6px;
+    padding-inline: clamp(8px,1vw,20px);
+    margin-right: var(--score-clearance);
+    border-left-color: transparent;
+    border-right-color: transparent;
+  }
+
+  html[data-monitor=true] .score-column-head>.monitor-games-heading {
+    margin-right: var(--score-clearance);
+  }
+
+  html[data-monitor=true] .monitor-games::before {
+    content: "";
+    position: absolute;
+    top: 12%;
+    bottom: 12%;
+    width: 1px;
+    background: linear-gradient(to bottom,transparent,var(--muted),transparent);
+    opacity: .22;
+    pointer-events: none;
+  }
+
+  html[data-monitor=true] .monitor-games::after {
+    content: "";
+    position: absolute;
+    top: 12%;
+    bottom: 12%;
+    width: 1px;
+    background: linear-gradient(to bottom,transparent,var(--muted),transparent);
+    opacity: .22;
+    pointer-events: none;
+  }
+
+  html[data-monitor=true] .monitor-games::before {
+    left: 0;
+  }
+
+  html[data-monitor=true] .monitor-games::after {
+    right: 0;
+  }
+
+}
+
+@media (min-width:1000px) {
+  html[data-monitor=true] .podium-card {
+    --podium-accent: var(--pride-blue);
+    border-top: 3px solid var(--podium-accent);
+  }
+
+  html[data-monitor=true] .podium-card:nth-child(2) {
+    --podium-accent: var(--pride-pink);
+  }
+
+  html[data-monitor=true] .podium-card:nth-child(3) {
+    --podium-accent: var(--muted);
+  }
+
+  html[data-monitor=true] .podium-card>header {
+    grid-template-columns: clamp(44px,4.4vw,84px) minmax(0,1fr);
+    column-gap: clamp(8px,.7vw,14px);
+    row-gap: 3px;
+    padding-bottom: 10px;
+  }
+
+  html[data-monitor=true] .podium-card>header>div {
+    display: contents;
+  }
+
+  html[data-monitor=true] .podium-rank {
+    grid-column: 1;
+    grid-row: 1/3;
+    align-self: stretch;
+    display: grid;
+    place-items: center;
+    min-height: clamp(52px,7vh,80px);
+    font: 800 clamp(28px,3.4vw,64px)/1 "Cascadia Mono",Consolas,monospace;
+    color: var(--ink);
+    background: color-mix(in srgb,var(--podium-accent) 16%,var(--paper));
+    border: 2px solid color-mix(in srgb,var(--podium-accent) 55%,var(--paper));
+    border-radius: 6px;
+  }
+
+  html[data-monitor=true] .podium-card>header>div>strong {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;
+    font: 750 clamp(20px,1.65vw,34px)/1.2 system-ui,sans-serif;
+    overflow-wrap: anywhere;
+  }
+
+  html[data-monitor=true] .podium-total {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+    font-size: clamp(26px,2.3vw,48px);
+    line-height: 1.1;
+  }
+
+}
+
+@media (min-width:1000px) and (max-height:1000px) {
+  html[data-monitor=true] .monitor-podium {
+    flex-basis: 63%;
+  }
+
+}
+
+@media (min-width:1000px) and (max-height:800px) {
+  html[data-monitor=true] .monitor-podium {
+    flex-basis: 58%;
+  }
+
+}
+
+@media (min-width:1000px) and (max-width:1100px) and (max-height:800px) {
+  html[data-monitor=true] .podium-game .monitor-game-block {
+    min-height: 27px;
+  }
+
+}
+
+@media (min-width:1000px) {
+  html[data-monitor=true] .monitor-finalists .ranking-entry[data-card-progress=in-progress] .player-info>a {
+    font-size: clamp(16px,1.25vw,24px);
+  }
+
+}
+
+@media (min-width:1000px) {
+  html[data-monitor=true] .ranking-entry[data-card-progress=in-progress] .player-info {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) auto;
+    align-items: center;
+    gap: 6px;
+  }
+
+  html[data-monitor=true] .ranking-entry .player-info>.card-progress-header {
+    display: block;
+    grid-column: 2;
+    grid-row: 1;
+    width: clamp(44px,3.6vw,68px);
+    font: 600 clamp(7px,.5vw,10px)/1.2 system-ui,sans-serif;
+    color: var(--muted);
+  }
+
+  html[data-monitor=true] .ranking-entry .player-info>a {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+  }
+
+}

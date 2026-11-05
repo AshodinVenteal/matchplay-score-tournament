@@ -1,0 +1,60 @@
+/* Structural banner layout shared by the display themes. */
+.player-game-banners {
+  display: grid;
+  grid-column: 2 / -1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  min-width: 0;
+  margin: 6px 0;
+}
+
+.player-game-banners .monitor-game-block {
+  display: inline-flex;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 28px;
+  box-sizing: border-box;
+  padding: 2px 4px 8px;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  font: 600 10px/1.1 system-ui, sans-serif;
+  text-align: center;
+  white-space: normal;
+}
+
+.player-game-banners .monitor-game-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.player-game-banners .monitor-era-tag {
+  position: absolute;
+  right: 3px;
+  bottom: 1px;
+  font: 600 7px/1.2 system-ui, sans-serif;
+}
+
+.monitor-game-block.game-slot-empty {
+  background: var(--panel);
+  border-color: var(--strong-line);
+  opacity: .25;
+}
+
+.card-progress-header {
+  padding: 2px 5px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--panel);
+  text-align: center;
+}
+
+html.has-script .ranking-entry .card-details > summary {
+  display: none;
+}
+
+html:not(.has-script) .ranking-entry .breakdown-toggle {
+  display: none;
+}
