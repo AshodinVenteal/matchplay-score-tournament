@@ -67,8 +67,8 @@ ARENAS = [
     ),
     Arena(name="White Water", short_name="White Water", era="mid", multiplier=0.4),
     Arena(name="Congo", short_name="Congo", era="mid", multiplier=0.13),
-    Arena(name="Theatre of Magic", short_name="Theatre", era="mid", multiplier=0.12),
-    Arena(name="Disney TRON: Legacy", short_name="TRON", era="mid", multiplier=3.1),
+    Arena(name="Theatre of Magic", short_name="Theatre", era="mid", multiplier=0.11),
+    Arena(name="Disney TRON: Legacy", short_name="TRON", era="mid", multiplier=3),
     Arena(name="Star Trek (Premium)", short_name="Star Trek", era="mid", multiplier=1),
     # New (full LCD displays)
     Arena(
