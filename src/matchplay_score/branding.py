@@ -1,8 +1,5 @@
 """Public names and descriptions used by the site and release package."""
 
-SITE_TITLE = "ScoreHigh 4 Trans Lives PAPA-Style Scoring Page"
-SITE_DESCRIPTION = "ScoreHigh - PAPA-Style Scoring Tracker for Tournaments."
-REPOSITORY_DESCRIPTION = (
-    "Code and Development for the Front End of the Scoring System for Tournaments "
-    "that utilize card-based scoring"
-)
+SITE_TITLE = "ScoreHigh"
+SITE_DESCRIPTION = "ScoreHigh - Tracker for Total Score Card Format tournaments"
+REPOSITORY_DESCRIPTION = "Code and development for a scoring system for pinball tournaments, using retro Total Score card-based scoring."

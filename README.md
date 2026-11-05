@@ -1,8 +1,8 @@
-# ScoreHigh 4 Trans Lives PAPA-Style Scoring Page
+# ScoreHigh
 
-Code and Development for the Front End of the Scoring System for Tournaments that utilize card-based scoring
+Scoring system for the TPC ScoreHigh format, as used in [Score High for Trans Lives](https://posts.arborelia.net/trans-lives/).
 
-[Public site](https://ashodinventeal.github.io/scorehigh/) | [Preview](https://ashodinventeal.github.io/scorehigh-preview/)
+[Public site](https://score.arborelia.net) | [Preview](https://ashodinventeal.github.io/scorehigh-preview/)
 
 This frontend runs with the existing Flask application, including the hosted
 deployment at https://tpc-high-score.vercel.app. The links above are the separate
