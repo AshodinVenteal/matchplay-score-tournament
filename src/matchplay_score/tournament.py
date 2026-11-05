@@ -75,7 +75,7 @@ ARENAS = [
         name="Jurassic Park (Pro)",
         short_name="Jurassic Park",
         era="new",
-        multiplier=0.31,
+        multiplier=0.33,
     ),
     Arena(
         name="Iron Maiden: Legacy of the Beast (Pro)",
