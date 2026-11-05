@@ -1,0 +1,7 @@
+<details class="panel format-panel" id="format"{% if rules_expanded|default(false) %} open{% endif %}>
+<summary><strong>Scoring rules</strong><span class="details-plus" aria-hidden="true">+</span></summary>
+
+<div class="rules-content"><p>Multiply each game score by the machine's multiplier, then add the results for the card total. Your best valid card counts toward the standings.</p><ul><li>A card can have up to {{ max_per_era }} games per era.</li><li>Scores from separate cards aren't combined.</li></ul><p>Open a card to see its game scores and multipliers.</p>
+<div class="era-legend"><span class="era era-old">Old · Alphanumeric</span><span class="era era-mid">Mid · DMD</span><span class="era era-new">New · LCD</span></div>
+<p class="muted">Cards over the era limit don't count. Ask a tournament director if a card looks wrong.</p></div>
+</details>

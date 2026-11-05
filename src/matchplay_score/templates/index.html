@@ -1,24 +1,18 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-    <title>Score Card tournaments</title>
-    <style>
-        body {
-            font-family: "Roboto", sans-serif;
-        }
-    </style>
-</head>
-
-<body>
-    <h1>Choose a tournament</h1>
-    <ul>
-        {% for id, name in tournaments.items() %}
-        <li>
-            <a href="/ranking/{{id}}">{{name}}</a>
-        </li>
-        {% endfor %}
-    </ul>
-</body>
-
-</html>
+{% extends "base.html" %}
+{% block title %}{{ site_title }}{% endblock %}
+{% block content %}
+<section class="page-heading"><h1>{{ site_title }}</h1><p>{{ repository_description }}</p></section>
+<section class="standings-ticker panel" aria-label="Match Play standings" data-ticker data-updated-at="{{ updated_at }}">
+<div class="ticker-heading"><strong>Match Play standings</strong><button class="text-button" type="button" data-ticker-pause aria-pressed="false" hidden>Pause</button></div>
+<div class="ticker-viewport" tabindex="0" aria-label="Match Play positions and points; scroll to read all results"><div class="ticker-track" data-ticker-track><div class="ticker-group">
+{% for standing in ticker %}<a class="ticker-item" href="{{ matchplay_urls.get(standing.tournament_id, 'https://app.matchplay.events/') }}" target="_blank" rel="noopener noreferrer"><span>{{ standing.tournament }}</span><strong>#{{ standing.position }} {{ standing.player }}</strong><span>{{ standing.points }} pts</span></a>{% else %}<span class="ticker-item">{% if ticker_unavailable %}Standings temporarily unavailable.{% else %}No Match Play standings yet.{% endif %}</span>{% endfor %}
+</div></div></div>
+{% if ticker_unavailable and ticker %}<small class="ticker-warning">Unavailable: {{ ticker_unavailable|join(', ') }}</small>{% endif %}
+</section>
+<section class="panel"><div class="panel-bar"><h2>Tournament list</h2><span>{{ tournaments|length }} listed</span></div>
+{% for id, name in tournaments.items() %}
+<div class="tournament-item"><a class="tournament-link" href="{{ url_for('render_ranking', tournament_id=id) }}"><span class="tournament-icon" aria-hidden="true">{{ tournament_icons[id] }}</span><span><strong>{{ name }}</strong><small>Best-card standings · Tournament {{ id }}</small></span><span class="link-arrow" aria-hidden="true">→</span></a><a class="matchplay-button" href="{{ matchplay_urls.get(id, 'https://app.matchplay.events/') }}" target="_blank" rel="noopener noreferrer" aria-label="Open {{ name }} in Match Play (opens in a new tab)">Open Match Play <span aria-hidden="true">↗</span></a></div>
+{% else %}<p class="empty-state">No tournaments have been listed yet.</p>{% endfor %}
+</section>
+{% include "rules.html" %}
+{% endblock %}

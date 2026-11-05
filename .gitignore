@@ -1,4 +1,4 @@
-# Python-generated files
+# Python build artifacts
 __pycache__/
 *.py[oc]
 build/
@@ -8,3 +8,13 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Local browser checks and screenshots
+.preview/
+
+# Generated GitHub Pages output
+_site/
+
+# Test and lint caches
+.pytest_cache/
+.ruff_cache/

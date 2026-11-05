@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en" data-style="matchplay"{% if monitor|default(false) %} data-monitor="true"{% endif %}>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173c42">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/pinball.svg') }}">
+  <meta name="description" content="{{ site_description }}">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{ site_description }}">
+  <meta property="og:description" content="{{ site_description }}">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="{{ site_description }}">
+  <meta name="twitter:description" content="{{ site_description }}">
+  <title>{% block title %}{{ site_description }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='scorehigh.css', v=asset_version) }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='windows.css', v=asset_version) }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='portal.css', v=asset_version) }}" data-portal-stylesheet disabled>
+  <link rel="stylesheet" href="{{ url_for('static', filename='brand.css', v=asset_version) }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='ticker.css', v=asset_version) }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='standings.css', v=asset_version) }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='matchplay.css', v=asset_version) }}" data-matchplay-stylesheet>
+  <link rel="stylesheet" href="{{ url_for('static', filename='monitor.css', v=asset_version) }}" data-monitor-stylesheet>
+  <script src="{{ url_for('static', filename='monitor.js', v=asset_version) }}" defer></script>
+  <script src="{{ url_for('static', filename='scorehigh.js', v=asset_version) }}" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to scores</a>
+<header class="masthead">
+<div class="masthead-inner">
+<a class="wordmark segment-wordmark" href="{{ url_for('index') }}" aria-label="Score High for Trans Lives home"><span class="logo-title" aria-hidden="true">SCORE HIGH</span><span class="logo-subtitle" aria-hidden="true">4 TRANS LIVES</span></a>
+<a class="donation-link" href="https://www.pointofpride.org/donate" target="_blank" rel="noopener noreferrer">Donate to Point of Pride <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
+<details class="display-settings" data-theme-settings hidden>
+<summary>Display <span aria-hidden="true">▾</span></summary>
+
+<div class="display-menu">
+<label><span>Website style</span><select data-style-select aria-label="Website style"><option value="matchplay">Simple (default)</option><option value="windows">Classic Windows</option><option value="portal">2000s Portal</option></select></label>
+<label><span>Color mode</span><select data-theme-select aria-label="Color theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
+<label><span>Score digits</span><select data-score-font-select aria-label="Score digits"><option value="plain">Readable monospace (default)</option><option value="segmented">Alphanumeric (7 Segment Display)</option><option value="matrix">Dot matrix</option><option value="lcd">LCD Mono</option><option value="highway">Electronic highway sign</option><option value="terminal">Retro terminal</option></select></label>
+<div class="score-font-preview"><span>Score preview</span><strong data-score-preview>531,800,000</strong><small>0123456789</small></div>
+
+<small>Saved on this device.</small></div>
+</details>
+</div>
+</header>
+
+<div class="site-shell">
+<div class="utility-bar"><a href="{{ url_for('index') }}">Tournaments</a><span>CARD SCORING / PINBALL</span></div>
+
+{% if tournament_id is defined %}
+<section class="tournament-heading">
+<div><p class="eyebrow">TOURNAMENT {{ tournament_id }}</p><h1><span class="heading-icon" aria-hidden="true">{{ tournament_icons.get(tournament_id, '🏆') }}</span> {{ title }}</h1></div>
+</section>
+
+<nav class="tabs" aria-label="Tournament"><a {% if active_tab == 'standings' %}aria-current="page"{% endif %} href="{{ url_for('render_ranking', tournament_id=tournament_id) }}">Standings</a><a {% if active_tab == 'machines' %}aria-current="page"{% endif %} href="{{ url_for('render_machines', tournament_id=tournament_id) }}">Machines</a><a {% if active_tab == 'how_it_works' %}aria-current="page"{% endif %} href="{{ url_for('render_how_it_works', tournament_id=tournament_id) }}">How it works</a><a class="matchplay-tab" href="{{ matchplay_urls.get(tournament_id, 'https://app.matchplay.events/') }}" target="_blank" rel="noopener noreferrer">Match Play <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a></nav>
+
+{% endif %}
+<main id="main" tabindex="-1">{% block content %}{% endblock %}</main>
+
+<footer class="site-footer"><a class="footer-brand" href="{{ url_for('index') }}">SCOREHIGH</a><span>Scores from <a href="https://matchplay.events/">Match Play</a></span></footer>
+
+</div>
+
+</body>
+</html>

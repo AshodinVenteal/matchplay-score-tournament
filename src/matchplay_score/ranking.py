@@ -1,6 +1,6 @@
 __package__ = "matchplay_score"
-from .tournament import Card, parse_tournament, parse_card, UNKNOWN
-from .matchplay_api import get_tournament_data_cached, get_tournament_data, get_cards
+from .matchplay_api import get_cards, get_tournament_data, get_tournament_data_cached
+from .tournament import UNKNOWN, Card, parse_card, parse_tournament
 
 
 def best_cards(tournament_id: int, use_cache: bool = True) -> list[Card]:
@@ -19,9 +19,7 @@ def best_cards(tournament_id: int, use_cache: bool = True) -> list[Card]:
             if use_cache and card.player_name == UNKNOWN:
                 return best_cards(tournament_id, use_cache=False)
 
-            if card.player_name not in cards_by_player:
-                cards_by_player[card.player_name] = card
-            elif (
+            if card.player_name not in cards_by_player or (
                 cards_by_player[card.player_name].computed_score()
                 < card.computed_score()
             ):
@@ -33,19 +31,21 @@ def best_cards(tournament_id: int, use_cache: bool = True) -> list[Card]:
 def player_cards(
     tournament_id: int, player_name: str, use_cache: bool = True
 ) -> list[Card]:
-    if use_cache:
-        tournament_data = get_tournament_data_cached(tournament_id)
-    else:
-        tournament_data = get_tournament_data(tournament_id)
-    card_data: list[dict] = get_cards(tournament_id)
-
+    """Include invalid cards in player history so their exclusion is visible."""
+    tournament_data = (
+        get_tournament_data_cached(tournament_id)
+        if use_cache
+        else get_tournament_data(tournament_id)
+    )
     tournament = parse_tournament(tournament_data)
-    player_cards: list[Card] = []
-    for card_item in card_data:
-        card: Card = parse_card(card_item, tournament)
-        if card.player_name == player_name:
-            player_cards.append(card)
-    return sorted(player_cards, key=Card.computed_score, reverse=True)
+    if use_cache and player_name not in tournament.players_by_id.values():
+        tournament = parse_tournament(get_tournament_data(tournament_id))
+    cards = [parse_card(item, tournament) for item in get_cards(tournament_id)]
+    return sorted(
+        (card for card in cards if card.player_name == player_name),
+        key=Card.computed_score,
+        reverse=True,
+    )
 
 
 def main():

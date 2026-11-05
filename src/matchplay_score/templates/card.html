@@ -1,0 +1,9 @@
+{% macro breakdown(card) %}
+<div class="game-breakdown">
+<div class="breakdown-heading"><span>Machine / raw score × multiplier</span><span>Adjusted points</span></div>
+{% for game in card.games %}
+<div class="game-row"><div class="machine-info"><strong>{{ game.game_name }}</strong><span class="era era-{{ game.era }}">{{ {'old': 'Old', 'mid': 'Mid', 'new': 'New'}.get(game.era, game.era) }}</span><small>{{ game.score|commafy }} <span class="muted">× {{ game.multiplier }}</span></small></div><strong class="adjusted-score">{{ game.computed_score()|commafy }}</strong></div>
+{% endfor %}
+<div class="breakdown-total"><span>Card total{% if not card.is_valid() %} · excluded{% endif %}</span><strong>{{ card.computed_score()|commafy }}</strong></div>
+</div>
+{% endmacro %}

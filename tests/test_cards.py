@@ -1,7 +1,10 @@
-from matchplay_score.matchplay_api import get_tournament_data, get_cards
-from matchplay_score.tournament import parse_tournament, parse_card, Card
+import pytest
+
+from matchplay_score.matchplay_api import get_cards, get_tournament_data
+from matchplay_score.tournament import Card, parse_card, parse_tournament
 
 
+@pytest.mark.integration
 def test_cards():
     tournament_data = get_tournament_data(281672)
     card_data: list[dict] = get_cards(281672)

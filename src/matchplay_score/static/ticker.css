@@ -1,0 +1,13 @@
+.standings-ticker{margin-bottom:16px;min-width:0}
+.ticker-heading{display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:var(--panel);border-bottom:1px solid var(--line);min-height:38px;font-size:12px}
+.ticker-heading .text-button{font-size:12px;min-height:36px}
+.ticker-viewport{overflow-x:auto;overflow-y:hidden;min-width:0}
+.ticker-track{display:flex;width:max-content;align-items:center}
+.ticker-group{display:flex;align-items:center;flex-shrink:0}
+.ticker-item{display:flex;gap:12px;align-items:center;padding:12px 20px;white-space:nowrap;font-size:13px;text-decoration:none;border-right:1px solid var(--line)}
+.ticker-item>span{color:var(--muted)}
+.ticker-track.is-running{animation:standings-scroll var(--ticker-duration,40s) linear infinite}
+.standings-ticker.is-paused .ticker-track,.standings-ticker:hover .ticker-track,.standings-ticker:focus-within .ticker-track{animation-play-state:paused}
+.ticker-warning{display:block;padding:6px 12px;color:var(--muted)}
+@keyframes standings-scroll{to{transform:translateX(-50%)}}
+@media(prefers-reduced-motion:reduce){.ticker-track.is-running{animation:none}.ticker-group[aria-hidden=true]{display:none}}

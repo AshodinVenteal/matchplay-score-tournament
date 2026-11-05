@@ -1,106 +1,103 @@
-<!DOCTYPE html>
-<html>
+{% extends "base.html" %}
+{% from "card.html" import breakdown %}
+{% from "components.html" import game_banner, game_banners, progress_header with context %}
+{% block content %}
+<div class="monitor-tools" data-monitor-tools hidden><a class="framed-button" href="{{ url_for('render_ranking', tournament_id=tournament_id) }}">Exit display</a><button class="framed-button" type="button" data-fullscreen>Fullscreen</button><button class="framed-button" type="button" data-monitor-prev aria-label="Previous standings page">←</button><span data-monitor-page role="status"></span><button class="framed-button" type="button" data-monitor-next aria-label="Next standings page">→</button><button class="framed-button" type="button" data-monitor-rotate aria-pressed="true">Rotate: on</button></div>
 
-<head>
-    <title>Best Card Ranking - {{ title }}</title>
-    <meta http-equiv="refresh" content="60">
-    <style>
-        body {
-            font-family: "Roboto", sans-serif;
-        }
+<div class="workspace">
+<nav class="portal-directory panel" aria-label="Pinball directory">
+<div class="panel-bar"><h2>Navigation</h2></div>
+<a href="{{ url_for('index') }}">All tournaments</a><a aria-current="page" href="{{ url_for('render_ranking', tournament_id=tournament_id) }}">Standings</a><a href="{{ url_for('render_machines', tournament_id=tournament_id) }}">Machines &amp; multipliers</a><a href="{{ url_for('render_how_it_works', tournament_id=tournament_id) }}">Scoring rules</a></nav>
 
-        .game-inline {
-            display: inline-block;
-            padding-left: 0.2em;
-            padding-right: 0.2em;
-        }
+<section class="standings-section" aria-labelledby="standings-title">
+<div class="section-heading">
+<div><p class="eyebrow">BEST-CARD RANKING</p><h2 id="standings-title">Standings</h2></div>
 
-        .game-cell {
-            padding-left: 0.5em;
-            padding-right: 0.5em;
-            min-width: 7em;
-        }
+<div class="monitor-era-legend" aria-label="Machine eras"><span class="era era-old">Old &middot; Alphanumeric</span><span class="era era-mid">Mid &middot; DMD</span><span class="era era-new">New &middot; LCD</span></div>
 
-        .game-old {
-            background-color: #ea6;
-        }
+<div class="refresh-controls" data-refresh-controls hidden><a class="framed-button event-display-link" href="{{ url_for('render_monitor', tournament_id=tournament_id) }}" aria-label="Open monitor display">Monitor ↗</a><button class="text-button" type="button" data-refresh>↻ Refresh</button><button class="text-button" type="button" data-auto aria-pressed="true">Auto: on</button></div>
+</div>
 
-        .game-mid {
-            background-color: #8e8;
-        }
+<p class="section-description">Highest valid card per player.</p>
+<div class="tracking-toolbar" data-tracking-toolbar hidden><button class="framed-button" type="button" data-following-filter aria-pressed="false">Following only</button><span data-claim-status>No player claimed.</span></div>
 
-        .game-new {
-            background-color: #6ae;
-        }
+<div class="search-toolbar" data-search-toolbar hidden><label class="search-field"><span aria-hidden="true">⌕</span><span class="sr-only">Find a player</span><input type="search" data-player-search placeholder="Find a player…" autocomplete="off" spellcheck="false"></label><button class="text-button clear-search" type="button" data-clear-search hidden>Clear</button><button class="framed-button" type="button" data-expand aria-pressed="false">Expand cards</button></div>
 
-        .rank {
-            font-weight: bold;
-        }
+<div class="panel scoreboard" data-score-content>
+<section class="monitor-podium" aria-label="Top three card breakdowns">
+{% for card in cards[:3] %}
+<article class="podium-card">
+<header>
+<div><span class="podium-rank" aria-label="Rank {{ loop.index }}">#{{ loop.index }}</span><strong>{{ card.player_name }}</strong></div>
+<strong class="podium-total">{{ card.computed_score()|commafy }}</strong></header>
 
-        .player {
-            padding-left: 0.5em;
-            padding-right: 0.5em;
-        }
+<div class="podium-columns"><span>{% if card.games|length < card_game_limit %}<span class="card-progress">Card in progress &middot; {{ card.games|length }}/{{ card_game_limit }} games</span>{% else %}Machine · score × multiplier{% endif %}</span><span>Points</span></div>
 
-        .score {
-            padding-left: 0.5em;
-            text-align: right;
-        }
+{% for game in card.games %}<div class="podium-game">
+<div>{{ game_banner(game) }}<small class="podium-calculation"><span class="podium-raw">{{ game.score|commafy }}</span><span class="podium-multiplier">× {{ game.multiplier }}</span></small></div>
+<strong class="podium-game-points">{{ game.computed_score()|commafy }}</strong></div>
+{% endfor %}
+{% for slot in range(card.games|length, card_game_limit) %}<div class="podium-game podium-game-empty">
+<div>{{ game_banner() }}</div>
+</div>
+{% endfor %}
+</article>
 
-        .card-score {
-            color: #a3a;
-            text-align: right;
-            font-weight: bold;
-            font-size: 120%;
-        }
+{% endfor %}
+</section>
 
-        .equals {
-            color: #a3a;
-        }
+<div class="panel-bar"><h3>Overall ranking</h3><span data-player-count>{{ cards|length }} player{{ '' if cards|length == 1 else 's' }}</span></div>
 
-        .computed-score {
-            color: #a3a;
-            text-align: right;
-        }
-    </style>
-</head>
+<div class="score-column-head" aria-hidden="true"><span>RANK / PLAYER</span><span>BEST CARD POINTS</span><span class="monitor-games-heading">GAMES</span></div>
 
-<body>
-    <h1>{{ title }}</h1>
+<div class="ranking-list">
+{% for card in cards %}
+<article class="ranking-entry" data-card-progress="{{ 'in-progress' if card.games|length < card_game_limit else 'complete' }}" data-player="{{ card.player_name }}" data-tracked-player="{{ card.player_name }}" data-tournament="{{ tournament_id }}" data-card-key="{{ card.player_name }}">
+<div class="ranking-row"><span class="rank {% if loop.index == 1 %}rank-first{% endif %}" aria-label="Rank {{ loop.index }}">{{ loop.index }}</span>
+<div class="player-info"><a href="{{ url_for('render_player', tournament_id=tournament_id, player_name=card.player_name) }}">{{ card.player_name }}</a>{{ progress_header(card) }}<button class="breakdown-toggle" type="button" data-card-toggle aria-expanded="false" aria-controls="breakdown-{{ card|card_key }}" aria-label="Game breakdown for {{ card.player_name }}"><span class="breakdown-text">Breakdown</span> <span class="chevron" aria-hidden="true">&#8964;</span></button><span class="player-card-meta">{% if card.games|length < card_game_limit %}{{ card.games|length }}/{{ card_game_limit }} games{% else %}{{ card.games|length }} games{% endif %}{% if loop.index == 1 %}<span class="leader-label">LEADER</span>{% endif %}</span></div>
 
-    <table class="best-cards">
-        {% for card in cards %}
-        <tr class="card">
-            <td class="rank">{{ loop.index }}</td>
-            <td class="player">
-                <a href="/player/{{ tournament_id }}/{{ card.player_name.replace(' ', '_') }}">
-                    {{ card.player_name }}
-                </a>
-            </td>
-            <td class="card-score">{{ card.computed_score() | commafy }}</td>
-            <td class="games">
-                {% if loop.index <= n_expanded %} <table class="games-expanded">
-                    {% for game in card.games %}
-        <tr class="game">
-            <td class="game-cell game-{{ game.era }}">{{ game.game_name }}</td>
-            <td class="score">{{ game.score | commafy }}</td>
-            <td class="multiplier">× {{ game.multiplier }}</td>
-            <td class="equals">=</td>
-            <td class="computed-score">{{ game.computed_score() | commafy }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-    {% else %}
-    {% for game in card.games %}
-    <span class="game-inline game-{{ game.era }}">
-        {{ game.game_name }}
-    </span>{% if not loop.last %}, {% endif %}
-    {% endfor %}
-    {% endif %}
-    </td>
-    </tr>
-    {% endfor %}
-    </table>
-</body>
+<div class="score-info"><strong>{{ card.computed_score()|commafy }}</strong></div>
+<span class="machine-chips player-game-banners">{{ game_banners(card, compact=True) }}</span></div>
 
-</html>
+<div class="monitor-games" aria-label="Machines played">{{ game_banners(card) }}</div>
+
+{% include "player_controls.html" %}
+<details class="card-details" id="breakdown-{{ card|card_key }}">
+<summary><span class="breakdown-label">Breakdown <span class="chevron" aria-hidden="true">⌄</span></span></summary>
+{{ breakdown(card) }}</details>
+
+</article>
+
+{% else %}<div class="empty-state"><p>No valid cards recorded yet.</p></div>
+{% endfor %}
+</div>
+
+<div class="empty-state" data-search-empty hidden><h3>No matching players</h3><p>Try another name or turn off “Following only” to see everyone.</p></div>
+
+<div class="scoreboard-footer"><span>Highest valid card per player</span><span>{{ cards|length }} ranked</span></div>
+
+</div>
+
+<p class="update-status" data-refresh-status role="status" data-updated-at="{{ updated_at }}" {% if static_snapshot %}data-static-snapshot="true"{% endif %}>Snapshot: {{ updated_at }} · checks every 60s.</p>
+</section>
+
+<aside class="sidebar" aria-label="Tournament reference">
+<section class="panel quick-guide">
+<div class="panel-bar"><h2>Scoring</h2><span aria-hidden="true">i</span></div>
+<dl>
+<div><dt>Standings</dt><dd>Best valid card</dd></div>
+
+<div><dt>Game points</dt><dd>Score × multiplier</dd></div>
+
+<div><dt>Card points</dt><dd>Sum of game points</dd></div>
+
+<div><dt>Era limit</dt><dd>{{ max_per_era }} games per era</dd></div>
+</dl><a class="panel-link" href="{{ url_for('render_machines', tournament_id=tournament_id) }}">Machine multipliers <span aria-hidden="true">→</span></a></section>
+
+<section class="era-key"><h3>Machine eras</h3><p><span class="era era-old">OLD</span> Alphanumeric</p><p><span class="era era-mid">MID</span> Dot matrix / DMD</p><p><span class="era era-new">NEW</span> Full LCD</p></section>
+</aside>
+
+</div>
+
+{% include "rules.html" %}
+{% endblock %}
