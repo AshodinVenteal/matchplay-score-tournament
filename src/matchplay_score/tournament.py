@@ -117,12 +117,13 @@ def get_arenas_by_id(arena_data: list[dict]) -> dict[int, Arena]:
     arenas_by_name: dict[str, Arena] = {arena.name: arena for arena in ARENAS}
     arenas_by_id: dict[int, Arena] = {}
     for arena_item in arena_data:
-        arena_id = arena_item["arenaId"]
-        arena_name = arena_item["name"]
-        if arena_name in arenas_by_name:
-            arenas_by_id[arena_id] = arenas_by_name[arena_name]
-        else:
-            print(f"missing name: {arena_name}")
+        if arena_item["tournamentArena"]["status"] == "active":
+            arena_id = arena_item["arenaId"]
+            arena_name = arena_item["name"]
+            if arena_name in arenas_by_name:
+                arenas_by_id[arena_id] = arenas_by_name[arena_name]
+            else:
+                print(f"missing name: {arena_name}")
     return arenas_by_id
 
 

@@ -21,7 +21,11 @@ from .tournament import (
 
 app = Flask(__name__)
 APP_VERSION = version("matchplay-score")
-TOURNAMENT_INFO = {281672: "Test Tournament", 282316: "Score High for Trans Lives"}
+TOURNAMENT_INFO = {
+    281672: "Test Tournament",
+    282316: "Score High for Trans Lives",
+    282630: "ScoreHigh test run",
+}
 TOURNAMENT_EMOJI = (
     "🏅",
     "🎖️",
