@@ -100,7 +100,7 @@
                     <div class="ranking-row"><span class="rank {% if loop.index == 1 %}rank-first{% endif %}"
                             aria-label="Rank {{ loop.index }}">{{ loop.index }}</span>
                         <div class="player-info"><a
-                                href="{{ url_for('render_player', tournament_id=tournament_id, player_name=card.player_name) }}">{{
+                                href="{{ url_for('render_player', tournament_id=tournament_id, player_name=card.player_name.replace(' ', '_')) }}">{{
                                 card.player_name }}</a>{{ progress_header(card) }}<button class="breakdown-toggle"
                                 type="button" data-card-toggle aria-expanded="false"
                                 aria-controls="breakdown-{{ card|card_key }}"
