@@ -123,59 +123,91 @@
   };
   formatScoreSeparators();
 
-  // Standings ticker and published snapshot updates
-  const ticker = one('[data-ticker]');
-  if (ticker) {
-    let paused = false;
-    let checking = false;
-    const motion = matchMedia('(prefers-reduced-motion: reduce)');
-    const prepareTicker = () => {
-      const track = one('[data-ticker-track]', ticker);
-      const group = one('.ticker-group', track);
-      all('[data-ticker-copy]', track).forEach((node) => node.remove());
-      track.classList.remove('is-running');
-      if (!motion.matches && group.querySelector('a')) {
-        const copy = group.cloneNode(true);
-        copy.setAttribute('aria-hidden', 'true');
-        copy.setAttribute('inert', '');
-        copy.dataset.tickerCopy = 'true';
-        track.append(copy);
-        track.style.setProperty('--ticker-duration', `${Math.max(30, group.scrollWidth / 35)}s`);
-        track.classList.add('is-running');
-      }
-    };
+  // The homepage ticker is opt-in. It reads our cached scores, never Match Play.
+  const tickerToggle = one('[data-ticker-toggle]');
+  const tickerHost = one('[data-ticker-host]');
+  let tickerEnabled = readSetting('scorehigh-ticker') === 'on';
+  let tickerChecking = false;
+  let tickerPaused = false;
+  let tickerRequest;
+  const tickerMotion = matchMedia('(prefers-reduced-motion: reduce)');
+
+  const prepareTicker = () => {
+    if (!tickerHost) return;
+    const ticker = one('[data-ticker]', tickerHost);
+    if (!ticker) return;
+    const track = one('[data-ticker-track]', ticker);
+    const group = one('.ticker-group', track);
+    all('[data-ticker-copy]', track).forEach((node) => node.remove());
+    track.classList.remove('is-running');
+    ticker.classList.toggle('is-paused', tickerPaused);
     const pause = one('[data-ticker-pause]', ticker);
-    pause.hidden = false;
-    pause.addEventListener('click', () => {
-      paused = !paused;
-      ticker.classList.toggle('is-paused', paused);
-      pause.setAttribute('aria-pressed', String(paused));
-      pause.textContent = paused ? 'Resume' : 'Pause';
-    });
-    motion.addEventListener('change', prepareTicker);
-    prepareTicker();
-    setInterval(async () => {
-      if (checking || document.hidden || ticker.contains(document.activeElement)) return;
-      checking = true;
-      try {
-        const response = await fetch(location.href, {
-          cache: 'no-store',
-          signal: AbortSignal.timeout(20000),
-        });
-        if (!response.ok) return;
-        const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
-        const incoming = one('[data-ticker]', doc);
-        if (incoming && incoming.dataset.updatedAt !== ticker.dataset.updatedAt) {
-          one('[data-ticker-track]', ticker).replaceWith(one('[data-ticker-track]', incoming));
-          ticker.dataset.updatedAt = incoming.dataset.updatedAt;
-          prepareTicker();
-        }
-      } catch {
-        /* Keep the last published standings on a failed update. */
-      } finally {
-        checking = false;
+    pause.setAttribute('aria-pressed', String(tickerPaused));
+    pause.textContent = tickerPaused ? 'Resume' : 'Pause';
+    if (!tickerMotion.matches && group.querySelector('a')) {
+      const copy = group.cloneNode(true);
+      copy.setAttribute('aria-hidden', 'true');
+      copy.setAttribute('inert', '');
+      copy.dataset.tickerCopy = 'true';
+      track.append(copy);
+      track.style.setProperty('--ticker-duration', `${Math.max(30, group.scrollWidth / 35)}s`);
+      track.classList.add('is-running');
+    }
+  };
+
+  const refreshTicker = async () => {
+    if (
+      !tickerHost ||
+      !tickerEnabled ||
+      tickerChecking ||
+      document.hidden ||
+      tickerHost.contains(document.activeElement)
+    )
+      return;
+    tickerChecking = true;
+    tickerRequest = new AbortController();
+    const timeout = setTimeout(() => tickerRequest.abort(), 20000);
+    try {
+      const response = await fetch(tickerHost.dataset.tickerUrl, { signal: tickerRequest.signal });
+      if (!response.ok) throw new Error('Ticker unavailable');
+      const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
+      const incoming = one('[data-ticker]', doc);
+      if (!incoming) throw new Error('Incomplete ticker');
+      // Disabling the ticker also prevents an in-flight response from showing it.
+      if (tickerEnabled) {
+        tickerHost.replaceChildren(incoming);
+        prepareTicker();
       }
-    }, 60000);
+    } catch {
+      if (tickerEnabled && !one('[data-ticker]', tickerHost)) {
+        tickerHost.textContent = 'Standings temporarily unavailable.';
+      }
+    } finally {
+      clearTimeout(timeout);
+      tickerChecking = false;
+    }
+  };
+
+  if (tickerToggle) {
+    tickerToggle.checked = tickerEnabled;
+    tickerToggle.addEventListener('change', () => {
+      tickerEnabled = tickerToggle.checked;
+      saveSetting('scorehigh-ticker', tickerEnabled ? 'on' : 'off');
+      if (tickerHost) tickerHost.hidden = !tickerEnabled;
+      if (tickerEnabled) refreshTicker();
+      else tickerRequest?.abort();
+    });
+  }
+  if (tickerHost) {
+    tickerHost.hidden = !tickerEnabled;
+    tickerHost.addEventListener('click', (event) => {
+      if (!event.target.closest('[data-ticker-pause]')) return;
+      tickerPaused = !tickerPaused;
+      prepareTicker();
+    });
+    tickerMotion.addEventListener('change', prepareTicker);
+    if (tickerEnabled) refreshTicker();
+    setInterval(refreshTicker, 60000);
   }
 
   const monitorDisplay = window.ScoreHighMonitor.create({ enabled: monitor, one, all });
@@ -341,6 +373,7 @@
     } else {
       status.textContent = `Snapshot: ${time} · ${auto ? 'checks every 60s.' : 'checks paused.'}`;
     }
+    if (status.dataset.cached === 'true') status.textContent += ' Cached scores; retrying.';
   };
   const refresh = async (manual = false) => {
     if (busy || (!manual && (!auto || document.hidden))) return;
@@ -352,7 +385,6 @@
     status.textContent = staticSnapshot ? 'Checking published scores…' : 'Fetching scores…';
     try {
       const response = await fetch(location.href, {
-        cache: 'no-store',
         headers: { 'X-Requested-With': 'ScoreHigh' },
         signal: AbortSignal.timeout(25000),
       });
@@ -381,6 +413,7 @@
       monitorDisplay.layout();
       window.scrollTo({ top: scrollY, behavior: 'instant' });
       lastUpdated = new Date(timestamp.dataset.updatedAt);
+      status.dataset.cached = timestamp.dataset.cached || 'false';
       failed = false;
       delete status.dataset.error;
     } catch {

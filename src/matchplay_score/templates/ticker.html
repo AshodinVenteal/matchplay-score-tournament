@@ -1,0 +1,11 @@
+<section class="standings-ticker panel" aria-label="Tournament standings" data-ticker data-updated-at="{{ updated_at }}">
+    <div class="ticker-heading"><strong>Tournament standings</strong><button class="text-button" type="button" data-ticker-pause aria-pressed="false">Pause</button></div>
+    <div class="ticker-viewport" tabindex="0" aria-label="ScoreHigh card totals; scroll to read all results">
+        <div class="ticker-track" data-ticker-track><div class="ticker-group">
+            {% for standing in ticker %}
+            <a class="ticker-item" href="{{ url_for('render_ranking', tournament_id=standing.tournament_id) }}"><span>{{ standing.tournament }}</span><strong>#{{ standing.position }} {{ standing.player }}</strong><span>{{ standing.points|commafy }} points</span></a>
+            {% else %}<span class="ticker-item">{% if ticker_unavailable %}Standings temporarily unavailable.{% else %}No cards yet.{% endif %}</span>{% endfor %}
+        </div></div>
+    </div>
+    {% if ticker_unavailable %}<small class="ticker-warning">Unavailable: {{ ticker_unavailable|join(', ') }}</small>{% endif %}
+</section>
