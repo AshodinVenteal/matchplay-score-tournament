@@ -91,11 +91,6 @@ def get_tournament_data(tournament_id: int) -> dict:
     )["data"]
 
 
-def get_matchplay_standings(tournament_id: int) -> list[dict]:
-    payload = _request_json(f"{API_ORIGIN}/api/tournaments/{tournament_id}/standings")
-    return payload if isinstance(payload, list) else payload["data"]
-
-
 def get_cards(tournament_id: int) -> list[dict]:
     return get_paginated_data(f"{API_ORIGIN}/api/tournaments/{tournament_id}/cards")
 

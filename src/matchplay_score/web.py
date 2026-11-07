@@ -8,7 +8,7 @@ import requests
 from flask import Flask, abort, render_template
 
 from .branding import REPOSITORY_DESCRIPTION, SITE_DESCRIPTION, SITE_TITLE
-from .matchplay_api import get_matchplay_standings, get_tournament_data_cached
+from .matchplay_api import get_tournament_data_cached
 from .ranking import best_cards, player_cards
 from .tournament import (
     ARENAS,
@@ -203,6 +203,7 @@ def render_how_it_works(tournament_id: int):
 
 @app.errorhandler(requests.RequestException)
 def upstream_error(error):
+    print(error)
     return (
         render_template(
             "error.html",
@@ -227,29 +228,7 @@ def not_found(error):
 
 @app.route("/")
 def index():
-    ticker = []
-    unavailable = []
-    for tournament_id, title in TOURNAMENT_INFO.items():
-        try:
-            standings = get_matchplay_standings(tournament_id)
-            data = get_tournament_data_cached(tournament_id)
-            players = {player["playerId"]: player["name"] for player in data["players"]}
-            for standing in standings:
-                ticker.append(
-                    {
-                        "tournament": title,
-                        "tournament_id": tournament_id,
-                        "player": players.get(standing["playerId"], "Unknown player"),
-                        "position": standing["position"],
-                        "points": standing["points"],
-                    }
-                )
-        except requests.RequestException:
-            unavailable.append(title)
     return render_template(
         "index.html",
         tournaments=TOURNAMENT_INFO,
-        ticker=ticker,
-        ticker_unavailable=unavailable,
-        updated_at=score_timestamp(),
     )
