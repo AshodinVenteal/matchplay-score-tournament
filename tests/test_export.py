@@ -3,9 +3,12 @@ from unittest.mock import patch
 from matchplay_score import export, web
 
 
-def test_static_export_preserves_scores_links_and_history(tmp_path):
+def test_static_export_preserves_scores_links_and_history(tmp_path, monkeypatch):
+    monkeypatch.setattr(web, "TOURNAMENT_INFO", {281672: "Test Tournament"})
     tournament = {
-        "arenas": [{"arenaId": 1, "name": "Stars"}],
+        "arenas": [
+            {"arenaId": 1, "name": "Stars", "tournamentArena": {"status": "active"}}
+        ],
         "players": [{"playerId": 1, "name": "Test Player"}],
     }
     cards = [
@@ -23,10 +26,11 @@ def test_static_export_preserves_scores_links_and_history(tmp_path):
         ),
         patch("matchplay_score.ranking.get_cards", return_value=cards),
         patch.object(web, "get_tournament_data_cached", return_value=tournament),
-        patch.object(web, "get_matchplay_standings", return_value=[]),
     ):
         pages = export.export_site(tmp_path, "/scorehigh")
-    assert len(pages) == 6
+    assert len(pages) == 7
+    assert (tmp_path / "ticker/index.html").is_file()
+    assert (tmp_path / "data/tournaments/281672.json").is_file()
     ranking = (tmp_path / "ranking/281672/index.html").read_text(encoding="utf-8")
     assert "617,000" in ranking
     assert "/scorehigh/static/portal.css" in ranking
@@ -46,7 +50,7 @@ def test_static_export_preserves_scores_links_and_history(tmp_path):
     assert (tmp_path / "static/images/score-high-for-trans-lives.jpg").is_file()
     how = (tmp_path / "how-it-works/281672/index.html").read_text(encoding="utf-8")
     assert 'class="comparison-row counted-card"' in how
-    assert "<strong>526,000,000</strong>" in how
+    assert "<strong>519,000,000</strong>" in how
     assert "/scorehigh/how-it-works/281672" in ranking
     assert not web.app.config.get("SNAPSHOT_AT")
 

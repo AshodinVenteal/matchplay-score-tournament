@@ -36,9 +36,29 @@ Display settings provide light/dark/system colors, a simple layout, Classic Wind
 The separate ScoreHigh GitHub Pages deployment publishes static score snapshots
 about every five minutes; the browser checks published snapshots every 60
 seconds. This repository includes the exporter without enabling a scheduled
-Pages deployment. The Flask application serves tournament data directly.
+Pages deployment.
 
-Server requests share a 60-second cache and one-request-per-second pacing. Rate-limit responses respect Retry-After with at least a 60-second cooldown. Visitors to the static site do not make direct Match Play API calls. The tournament ticker shows native Match Play positions and points; the standings show ScoreHigh card totals.
+Vercel reads the published JSON snapshots instead of calling Match Play. The
+included `vercel.json` sets `SCOREHIGH_SNAPSHOT_URL` to
+`https://ashodinventeal.github.io/scorehigh`. If you run your own publisher,
+change that URL to its site root. It must publish `data/tournaments/<id>.json`
+for every configured tournament. Vercel does not use local disk for this path
+and refuses direct API reads if the snapshot URL is missing. Public HTML is
+cached at Vercel's CDN for 60 seconds with 300 seconds of background revalidation.
+
+The publisher is the only Match Play reader. Its SQLite store preserves successful
+responses, request pacing, and cooldowns between runs; set `SCOREHIGH_CACHE_PATH`
+to a persistent location and restore/save it in the publisher workflow. Live cards
+are cached as complete lists for 120 seconds, rosters for 300 seconds, and requests
+are spaced at least one second apart. Failed requests back off exponentially and
+respect longer Retry-After values. Successful snapshots can be used for up to 24
+hours during outages, with their original fetch timestamps. A failed export must
+not replace the deployed site.
+
+The homepage standings ticker is off by default. Enable **Homepage standings
+ticker** in Display settings; the choice is saved on that device. It uses the same
+ScoreHigh card totals as the standings, without a separate Match Play standings
+request. Disabled tickers make no polling requests.
 
 Here's how to build the public snapshot locally:
 
