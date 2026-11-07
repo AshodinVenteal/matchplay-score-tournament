@@ -21,11 +21,8 @@ from .tournament import (
 
 app = Flask(__name__)
 APP_VERSION = version("matchplay-score")
-TOURNAMENT_INFO = {281672: "Test Tournament"}
-# Placeholder links until tournament records supply their Match Play URLs.
-TOURNAMENT_MATCHPLAY_URLS = {281672: "https://app.matchplay.events/tournaments/281672"}
+TOURNAMENT_INFO = {281672: "Test Tournament", 282316: "Score High for Trans Lives"}
 TOURNAMENT_EMOJI = (
-    "🏆",
     "🏅",
     "🎖️",
     "🏁",
@@ -44,6 +41,12 @@ TOURNAMENT_EMOJI = (
 )
 
 
+def tournament_matchplay_urls():
+    return {
+        id: f"https://app.matchplay.events/tournaments/{id}/" for id in TOURNAMENT_INFO
+    }
+
+
 def tournament_icons():
     """Give listed tournaments repeatable random icons, avoiding duplicates."""
     icons = {}
@@ -52,6 +55,7 @@ def tournament_icons():
         icons[tournament_id] = next(
             (icon for icon in choices if icon not in icons.values()), choices[0]
         )
+    icons[282316] = "🏆"
     return icons
 
 
@@ -66,7 +70,7 @@ def site_context():
         "site_description": SITE_DESCRIPTION,
         "repository_description": REPOSITORY_DESCRIPTION,
         "tournament_icons": tournament_icons(),
-        "matchplay_urls": TOURNAMENT_MATCHPLAY_URLS,
+        "matchplay_urls": tournament_matchplay_urls(),
         "static_snapshot": bool(app.config.get("SNAPSHOT_AT")),
     }
 
@@ -195,20 +199,26 @@ def render_how_it_works(tournament_id: int):
 
 @app.errorhandler(requests.RequestException)
 def upstream_error(error):
-    return render_template(
-        "error.html",
-        title="Scores unavailable",
-        message="We couldn't reach Match Play. Please try again in a moment.",
-    ), 503
+    return (
+        render_template(
+            "error.html",
+            title="Scores unavailable",
+            message="We couldn't reach Match Play. Please try again in a moment.",
+        ),
+        503,
+    )
 
 
 @app.errorhandler(404)
 def not_found(error):
-    return render_template(
-        "error.html",
-        title="Page not found",
-        message="This player or page couldn't be found. Choose a tournament to continue.",
-    ), 404
+    return (
+        render_template(
+            "error.html",
+            title="Page not found",
+            message="This player or page couldn't be found. Choose a tournament to continue.",
+        ),
+        404,
+    )
 
 
 @app.route("/")
