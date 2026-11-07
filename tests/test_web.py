@@ -22,7 +22,7 @@ def make_card(name, games):
 @pytest.fixture
 def client(monkeypatch):
     web.app.config.update(TESTING=True)
-    monkeypatch.setattr(web, "best_cards", lambda *args, **kwargs: [])
+    monkeypatch.setattr(web, "get_matchplay_standings", lambda tournament_id: [])
     monkeypatch.setattr(
         web, "get_tournament_data_cached", lambda tournament_id: {"players": []}
     )
@@ -90,12 +90,7 @@ def test_upstream_outage_is_clear_and_retryable(client):
 
 
 def test_machine_catalog_uses_tournament_arenas(client):
-    data = {
-        "arenas": [
-            {"arenaId": 1, "name": "Stars", "tournamentArena": {"status": "active"}}
-        ],
-        "players": [],
-    }
+    data = {"arenas": [{"arenaId": 1, "name": "Stars"}], "players": []}
     with patch.object(web, "get_tournament_data_cached", return_value=data):
         response = client.get("/machines/281672")
     html = response.get_data(as_text=True)
@@ -118,12 +113,10 @@ def test_how_it_works_has_its_own_page_and_correct_examples(client):
     html = client.get("/how-it-works/281672").get_data(as_text=True)
     assert "<h2>How it works</h2>" in html
     assert "140,000,000" in html
-    assert "429,000,000" in html
-    assert "519,000,000" in html
-    assert "594,000,000" in html
-    import re
-
-    assert re.search(r'aria-current="page"\s+href="/how-it-works/281672"', html)
+    assert "436,000,000" in html
+    assert "526,000,000" in html
+    assert "603,500,000" in html
+    assert 'aria-current="page" href="/how-it-works/281672"' in html
     assert 'href="#format"' not in html
 
 
@@ -138,7 +131,7 @@ def test_tournament_icons_are_distinct_and_repeatable(client, monkeypatch):
 
 
 def test_matchplay_link_available_on_desk_and_inside_tournament(client):
-    target = web.tournament_matchplay_urls()[281672]
+    target = web.TOURNAMENT_MATCHPLAY_URLS[281672]
     for path, link_class in [
         ("/", "matchplay-button"),
         ("/how-it-works/281672", "matchplay-tab"),
@@ -149,48 +142,28 @@ def test_matchplay_link_available_on_desk_and_inside_tournament(client):
         assert 'rel="noopener noreferrer"' in html
 
 
-def test_home_does_not_fetch_scores_until_ticker_is_enabled(client, monkeypatch):
-    def unexpected(*args, **kwargs):
-        raise AssertionError("Homepage fetched tournament data")
-
-    monkeypatch.setattr(web, "best_cards", unexpected)
+def test_home_ticker_uses_matchplay_positions_not_adjusted_scores(client, monkeypatch):
+    monkeypatch.setattr(
+        web,
+        "get_matchplay_standings",
+        lambda tid: [{"playerId": 1, "position": 2, "points": 6}],
+    )
+    monkeypatch.setattr(
+        web,
+        "get_tournament_data_cached",
+        lambda tid: {"players": [{"playerId": 1, "name": "Ticker Player"}]},
+    )
     html = client.get("/").text
-    assert "data-ticker-host" in html
-    assert 'data-ticker-url="/ticker/" hidden' in html
-    assert "data-ticker-toggle" in html
-    assert "data-ticker-track" not in html
-
-
-def test_ticker_uses_existing_card_totals(client, monkeypatch, valid):
-    monkeypatch.setattr(web, "TOURNAMENT_INFO", {281672: "Test Tournament"})
-    monkeypatch.setattr(web, "best_cards", lambda tid: [valid])
-    html = client.get("/ticker/").text
-    assert "#1 Elia Lake" in html and "99,460,000 points" in html
-    assert 'href="/ranking/281672"' in html
+    assert "#2 Ticker Player" in html and "6 pts" in html
+    assert html.index("data-ticker") < html.index("Tournament list")
 
 
 def test_ticker_failure_does_not_hide_tournaments(client, monkeypatch):
     def unavailable(tid):
         raise requests.Timeout()
 
-    monkeypatch.setattr(web, "best_cards", unavailable)
-    assert client.get("/").status_code == 200
-    response = client.get("/ticker/")
+    monkeypatch.setattr(web, "get_matchplay_standings", unavailable)
+    response = client.get("/")
     assert response.status_code == 200
     assert "Standings temporarily unavailable." in response.text
-
-
-def test_public_pages_have_vercel_cache_headers(client):
-    response = client.get("/")
-    assert "s-maxage=60" in response.headers["Vercel-CDN-Cache-Control"]
-    assert "stale-while-revalidate=300" in response.headers["Vercel-CDN-Cache-Control"]
-    assert "public" in response.headers["Cache-Control"]
-    assert "Set-Cookie" not in response.headers
-
-
-def test_unknown_tournament_does_not_call_matchplay(client, monkeypatch):
-    def unexpected(*args, **kwargs):
-        raise AssertionError("Unknown event reached API")
-
-    monkeypatch.setattr(web, "best_cards", unexpected)
-    assert client.get("/ranking/99999999").status_code == 404
+    assert "Test Tournament" in response.text

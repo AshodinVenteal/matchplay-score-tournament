@@ -18,6 +18,3 @@ _site/
 # Test and lint caches
 .pytest_cache/
 .ruff_cache/
-
-# Persistent publisher cache (restored by the snapshot workflow)
-.cache/

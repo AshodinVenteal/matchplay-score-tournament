@@ -1,7 +1,6 @@
 """Build the Flask UI into a GitHub Pages-compatible score snapshot."""
 
 import argparse
-import json
 from datetime import UTC, datetime
 from importlib.metadata import distribution
 from pathlib import Path
@@ -9,71 +8,20 @@ from shutil import copytree
 from urllib.parse import quote, unquote
 
 from . import web
-from .matchplay_api import (
-    get_cards,
-    get_tournament_data_cached,
-    snapshot_batch,
-    snapshot_status,
-)
+from .matchplay_api import get_cards, get_tournament_data_cached
 from .tournament import parse_card, parse_tournament
 
 
 def export_site(output: Path, base_path: str = "") -> list[str]:
-    with snapshot_batch():
-        return _export_site(output, base_path)
-
-
-def _export_site(output: Path, base_path: str) -> list[str]:
     base_path = "/" + base_path.strip("/") if base_path.strip("/") else ""
     if any(part in {".", ".."} for part in base_path.split("/")):
         raise ValueError("Base path must not contain relative segments")
     output = output.resolve()
     output.mkdir(parents=True, exist_ok=True)
-    routes = ["/", "/ticker/"]
+    routes = ["/"]
     for tournament_id in web.TOURNAMENT_INFO:
-        tournament_data = get_tournament_data_cached(tournament_id)
-        card_data = get_cards(tournament_id)
-        tournament = parse_tournament(tournament_data)
-        cards = [parse_card(item, tournament) for item in card_data]
-        updated, _ = snapshot_status(tournament_id)
-        snapshot_path = output / "data" / "tournaments" / f"{tournament_id}.json"
-        snapshot_path.parent.mkdir(parents=True, exist_ok=True)
-        public_tournament = {
-            "players": [
-                {"playerId": p["playerId"], "name": p["name"]}
-                for p in tournament_data["players"]
-            ],
-            "arenas": [
-                {
-                    "arenaId": a["arenaId"],
-                    "name": a["name"],
-                    "tournamentArena": {"status": a["tournamentArena"]["status"]},
-                }
-                for a in tournament_data["arenas"]
-            ],
-        }
-        public_cards = [
-            {
-                "playerId": c["playerId"],
-                "singlePlayerGames": [
-                    {key: game[key] for key in ("arenaId", "playerId", "score")}
-                    for game in c["singlePlayerGames"]
-                ],
-            }
-            for c in card_data
-        ]
-        snapshot_path.write_text(
-            json.dumps(
-                {
-                    "tournament_id": tournament_id,
-                    "updated_at": updated or datetime.now(UTC).isoformat(),
-                    "tournament": public_tournament,
-                    "cards": public_cards,
-                },
-                ensure_ascii=False,
-            ),
-            encoding="utf-8",
-        )
+        tournament = parse_tournament(get_tournament_data_cached(tournament_id))
+        cards = [parse_card(item, tournament) for item in get_cards(tournament_id)]
         routes.extend(
             [
                 f"/ranking/{tournament_id}",

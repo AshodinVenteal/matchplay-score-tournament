@@ -5,10 +5,10 @@ from importlib.metadata import version
 from random import Random
 
 import requests
-from flask import Flask, abort, g, render_template, request
+from flask import Flask, abort, render_template
 
 from .branding import REPOSITORY_DESCRIPTION, SITE_DESCRIPTION, SITE_TITLE
-from .matchplay_api import get_tournament_data_cached, snapshot_status
+from .matchplay_api import get_tournament_data_cached
 from .ranking import best_cards, player_cards
 from .tournament import (
     ARENAS,
@@ -20,7 +20,7 @@ from .tournament import (
 )
 
 app = Flask(__name__)
-APP_VERSION = version("matchplay-score") + "-snapshots-2"
+APP_VERSION = version("matchplay-score")
 TOURNAMENT_INFO = {
     281672: "Test Tournament",
     282316: "Score High for Trans Lives",
@@ -59,8 +59,7 @@ def tournament_icons():
         icons[tournament_id] = next(
             (icon for icon in choices if icon not in icons.values()), choices[0]
         )
-    if 282316 in TOURNAMENT_INFO:
-        icons[282316] = "🏆"
+    icons[282316] = "🏆"
     return icons
 
 
@@ -77,31 +76,11 @@ def site_context():
         "tournament_icons": tournament_icons(),
         "matchplay_urls": tournament_matchplay_urls(),
         "static_snapshot": bool(app.config.get("SNAPSHOT_AT")),
-        "cached_scores": getattr(g, "cached_scores", False),
     }
 
 
-def score_timestamp(tournament_id=None):
-    updated, stale = snapshot_status(tournament_id) if tournament_id else (None, False)
-    g.cached_scores = stale
-    return updated or app.config.get("SNAPSHOT_AT") or datetime.now(UTC).isoformat()
-
-
-@app.before_request
-def known_tournament():
-    tournament_id = (request.view_args or {}).get("tournament_id")
-    if tournament_id is not None and tournament_id not in TOURNAMENT_INFO:
-        abort(404)
-
-
-@app.after_request
-def cache_public_pages(response):
-    if request.method in {"GET", "HEAD"} and request.endpoint != "static":
-        response.headers["Cache-Control"] = "public, max-age=0, must-revalidate"
-        response.headers["Vercel-CDN-Cache-Control"] = (
-            "public, s-maxage=60, stale-while-revalidate=300"
-        )
-    return response
+def score_timestamp():
+    return app.config.get("SNAPSHOT_AT") or datetime.now(UTC).isoformat()
 
 
 def tournament_title(tournament_id):
@@ -137,7 +116,7 @@ def standings_page(tournament_id: int, *, monitor: bool = False):
         cards=cards,
         title=title,
         tournament_id=tournament_id,
-        updated_at=score_timestamp(tournament_id),
+        updated_at=score_timestamp(),
         active_tab="standings",
         monitor=monitor,
     )
@@ -165,7 +144,7 @@ def render_player(tournament_id: int, player_name: str):
         rank=rank,
         title=tournament_title(tournament_id),
         tournament_id=tournament_id,
-        updated_at=score_timestamp(tournament_id),
+        updated_at=score_timestamp(),
         active_tab="standings",
     )
 
@@ -252,33 +231,4 @@ def index():
     return render_template(
         "index.html",
         tournaments=TOURNAMENT_INFO,
-    )
-
-
-@app.route("/ticker/")
-def render_ticker():
-    ticker = []
-    unavailable = []
-    timestamps = []
-    for tournament_id, title in TOURNAMENT_INFO.items():
-        try:
-            cards = best_cards(tournament_id)
-            timestamps.append(score_timestamp(tournament_id))
-            for position, card in enumerate(cards, 1):
-                ticker.append(
-                    {
-                        "tournament": title,
-                        "tournament_id": tournament_id,
-                        "player": card.player_name,
-                        "position": position,
-                        "points": card.computed_score(),
-                    }
-                )
-        except requests.RequestException:
-            unavailable.append(title)
-    return render_template(
-        "ticker.html",
-        ticker=ticker,
-        ticker_unavailable=unavailable,
-        updated_at=min(timestamps) if timestamps else "",
     )
