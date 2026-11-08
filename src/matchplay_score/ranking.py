@@ -1,6 +1,6 @@
 __package__ = "matchplay_score"
 from .matchplay_api import get_cards, get_tournament_data, get_tournament_data_cached
-from .tournament import UNKNOWN, Card, parse_card, parse_tournament
+from .tournament import CARD_GAME_LIMIT, UNKNOWN, Card, parse_card, parse_tournament
 
 
 def best_cards(tournament_id: int, use_cache: bool = True) -> list[Card]:
@@ -38,11 +38,19 @@ def player_cards(
         else get_tournament_data(tournament_id)
     )
     tournament = parse_tournament(tournament_data)
+    if player_name not in tournament.players_by_id.values() and "_" in player_name:
+        player_name = player_name.replace("_", " ")
     if use_cache and player_name not in tournament.players_by_id.values():
         tournament = parse_tournament(get_tournament_data(tournament_id))
     cards = [parse_card(item, tournament) for item in get_cards(tournament_id)]
+    matching = [card for card in cards if card.player_name == player_name]
+    dated = [card for card in matching if card.created_at or card.card_id]
+    if dated:
+        newest = max(dated, key=lambda card: (card.created_at, card.card_id))
+        for card in dated:
+            card.abandoned = card is not newest and len(card.games) < CARD_GAME_LIMIT
     return sorted(
-        (card for card in cards if card.player_name == player_name),
+        matching,
         key=Card.computed_score,
         reverse=True,
     )

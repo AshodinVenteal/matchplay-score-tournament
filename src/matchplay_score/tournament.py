@@ -42,6 +42,10 @@ class SinglePlayerGame:
 class Card:
     player_name: str
     games: list[SinglePlayerGame]
+    card_id: int = 0
+    created_at: str = ""
+    status: str = ""
+    abandoned: bool = False
 
     def computed_score(self) -> int:
         return sum(game.computed_score() for game in self.games)
@@ -49,6 +53,28 @@ class Card:
     def is_valid(self):
         counts = Counter(game.era for game in self.games)
         return all(counts[era] <= MAX_PER_ERA for era in ERAS)
+
+    def invalid_reasons(self):
+        counts = Counter(game.era for game in self.games)
+        labels = {"old": "Old", "mid": "Mid", "new": "New"}
+        return [
+            f"{counts[era]} {labels[era]} games; the limit is {MAX_PER_ERA}."
+            for era in ERAS
+            if counts[era] > MAX_PER_ERA
+        ]
+
+    def history_status(self):
+        if not self.is_valid() and (
+            self.status == "completed" or len(self.games) >= CARD_GAME_LIMIT
+        ):
+            return "Invalid"
+        if self.abandoned:
+            return "Abandoned"
+        if len(self.games) < CARD_GAME_LIMIT and self.status != "completed":
+            return "Card in progress"
+        if not self.is_valid():
+            return "Invalid"
+        return "Completed"
 
 
 ARENAS = [
@@ -159,5 +185,12 @@ def parse_card(card: dict, tournament: Tournament) -> Card:
     player_id = card["playerId"]
     return Card(
         player_name=tournament.get_player(player_id),
-        games=[parse_game(game, tournament) for game in card["singlePlayerGames"]],
+        games=[
+            parse_game(game, tournament)
+            for game in card["singlePlayerGames"]
+            if not game.get("voided", False)
+        ],
+        card_id=card.get("cardId", 0),
+        created_at=card.get("createdAt", ""),
+        status=card.get("status", ""),
     )

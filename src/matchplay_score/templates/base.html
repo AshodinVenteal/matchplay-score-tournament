@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-style="matchplay" {% if monitor|default(false) %} data-monitor="true" {% endif %}>
+<html lang="en" data-style="matchplay" {% if example_mode|default(false) %}data-examples="true"{% endif %} {% if monitor|default(false) %} data-monitor="true" {% endif %}>
 
 <head>
   <meta charset="utf-8">
@@ -71,6 +71,18 @@
   </header>
 
   <div class="site-shell">
+    {% if example_mode|default(false) %}
+    <aside class="example-banner" aria-label="Simulated tournament">
+      <strong>Examples &middot; simulated scores</strong>
+      <span>These cards do not change tournament records.</span>
+      <nav aria-label="Examples">
+        <a href="{{ url_for('example_cards') }}">Card examples</a>
+        <a href="{{ url_for('example_ranking') }}">25-player standings</a>
+        <a href="{{ url_for('example_monitor') }}">Monitor example</a>
+        <a href="{{ url_for('index') if not example_mode else '/ranking/282630' }}">Live test tournament</a>
+      </nav>
+    </aside>
+    {% endif %}
     <div class="utility-bar"><a href="{{ url_for('index') }}">Tournaments</a><span>CARD SCORING / PINBALL</span></div>
 
     {% if tournament_id is defined %}

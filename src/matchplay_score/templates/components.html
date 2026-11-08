@@ -10,9 +10,16 @@
   {% endif %}
 {%- endmacro %}
 
-{% macro game_banners(card, compact=False) -%}
-  {% for game in card.games %}{{ game_banner(game, compact) }}{% endfor %}
-  {% for slot in range(card.games|length, card_game_limit) %}{{ game_banner(compact=compact) }}{% endfor %}
+{% macro game_banners(card, compact=False, scores=False) -%}
+  {% for game in card.games %}
+    {% if scores %}<span class="monitor-game-cell">{% endif %}
+    {{ game_banner(game, compact) }}
+    {% if scores %}<strong class="monitor-game-score" title="Raw score · × {{ game.multiplier }} = {{ game.computed_score()|commafy }} points">{{ game.score|commafy }}</strong></span>{% endif %}
+  {% endfor %}
+  {% for slot in range(card.games|length, card_game_limit) %}
+    {% if scores %}<span class="monitor-game-cell">{% endif %}{{ game_banner(compact=compact) }}
+    {% if scores %}<span class="monitor-game-score" aria-hidden="true">—</span></span>{% endif %}
+  {% endfor %}
 {%- endmacro %}
 
 {% macro progress_header(card) -%}

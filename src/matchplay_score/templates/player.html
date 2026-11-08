@@ -9,11 +9,15 @@
 <div class="player-stats panel"><div><span>Tournament rank</span><strong>{{ '#' ~ rank if rank else 'Unranked' }}</strong></div><div><span>Best valid card</span><strong>{{ best_card.computed_score()|commafy if best_card else '—' }}</strong></div><div><span>Cards recorded</span><strong>{{ cards|length }}</strong></div></div>
 <div class="section-heading history-heading"><h3>Card history</h3><span class="muted">Highest total first</span></div>
 {% for card in cards %}
-<article class="panel history-card {% if not card.is_valid() %}invalid-card{% endif %}" data-card-key="{{ card|card_key }}"><div class="history-card-heading"><div><h3>Card {{ loop.index }}</h3><span class="card-label">{% if not card.is_valid() %}Excluded from standings{% elif card == best_card %}Best valid card{% else %}Valid card{% endif %} · {{ card.games|length }} games</span></div><strong class="history-total">{{ card.computed_score()|commafy }}</strong></div>
-{% if not card.is_valid() %}<p class="invalid-notice"><strong>Invalid card — ask a tournament director.</strong> More than {{ max_per_era }} games from one era. This total does not count toward your rank.</p>{% endif %}
-<details class="card-details" {% if card == best_card or not card.is_valid() %}open{% endif %}><summary><span>Machine scores &amp; multipliers</span><span class="chevron" aria-hidden="true">⌄</span></summary>{{ breakdown(card) }}</details></article>
+<article class="panel history-card {% if card.history_status() == "Invalid" %}invalid-card{% endif %}" data-card-key="{{ card|card_key }}"><div class="history-card-heading"><div><h3>Card {{ loop.index }}</h3><span class="card-label">{{ card.history_status() }}{% if card == best_card %} &middot; Best valid card{% endif %} · {{ card.games|length }} games</span></div><strong class="history-total">{{ card.computed_score()|commafy }}</strong></div>
+{% if card.history_status() == "Invalid" %}
+<p class="invalid-notice"><strong>Invalid card &middot; excluded from standings.</strong>
+{% for reason in card.invalid_reasons() %}{{ reason }} {% endfor %}
+A scorekeeper will make this card valid by erasing the latest entry in each category over the limit. A completed card needs two Old, two Mid, and two New games.</p>
+{% elif card.abandoned %}<p class="abandoned-notice">Abandoned &middot; a newer card was started before this card reached six games.</p>{% endif %}
+<details class="card-details" {% if example_mode|default(false) or card == best_card or not card.is_valid() %}open{% endif %}><summary><span>Machine scores &amp; multipliers</span><span class="chevron" aria-hidden="true">⌄</span></summary>{{ breakdown(card) }}</details></article>
 {% endfor %}
 </div>
-<p class="update-status" data-refresh-status role="status" data-updated-at="{{ updated_at }}" {% if static_snapshot %}data-static-snapshot="true"{% endif %}>Snapshot: {{ updated_at }} · checks every 60s.</p>
+<p class="update-status" data-refresh-status role="status" data-cached="{{ 'true' if cached_scores else 'false' }}" data-updated-at="{{ updated_at }}" {% if static_snapshot %}data-static-snapshot="true"{% endif %}>Snapshot: {{ updated_at }} · checks every 10s.</p>
 {% include "rules.html" %}
 {% endblock %}

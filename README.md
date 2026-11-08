@@ -33,12 +33,37 @@ Display settings provide light/dark/system colors, a simple layout, Classic Wind
 
 ## Score snapshots and caching
 
-The separate ScoreHigh GitHub Pages deployment publishes static score snapshots
-about every five minutes; the browser checks published snapshots every 60
-seconds. This repository includes the exporter without enabling a scheduled
-Pages deployment. The Flask application serves tournament data directly.
+The live Flask/Vercel application reads Match Play directly and shares a complete
+tournament roster and card list for 15 seconds. Browsers check every 10 seconds;
+public HTML has a five-second CDN cache. There is no GitHub Pages feed in the live
+data path. Typical updates take about 15-30 seconds, plus Match Play response time.
 
-Server requests share a 60-second cache and one-request-per-second pacing. Rate-limit responses respect Retry-After with at least a 60-second cooldown. Visitors to the static site do not make direct Match Play API calls. The tournament ticker shows native Match Play positions and points; the standings show ScoreHigh card totals.
+On Vercel, the Python SDK stores successful responses and cooldown state in the
+regional Runtime Cache. All functions use the `iad1` region. A process lock
+coalesces concurrent reads in each worker; Runtime Cache reuses data between
+workers. This cache is not a distributed lock, so simultaneous cold workers can
+still overlap requests. Each worker also respects shared pacing and cooldown
+state. Requests are spaced at least one second apart, with no automatic HTTP
+retries. Rate-limit responses back off and honor longer Retry-After values.
+
+A failed card page never replaces a complete list with partial results. Previously
+fetched scores remain available for up to an hour during an outage, with their
+original timestamps and a cached-score notice. Missing shared cache data during a
+cache outage returns an error rather than starting uncontrolled API requests.
+
+Deploy with `vercel deploy --prod` after `vercel link`. No external snapshot URL
+or local disk cache is required. The separate GitHub Pages exporter is still
+available for static snapshots; it cannot provide live tournament updates.
+
+Player URLs use underscores for spaces. Player histories mark older incomplete
+cards as Abandoned using card creation order. Completed cards over a category
+limit are greyed out with the reason and scorekeeper correction instructions;
+the site never erases scores itself. Monitor ranking rows show each machine's
+raw score beneath its tile.
+
+The `/examples/` page shows simulated valid, invalid, abandoned, and in-progress
+cards. `/examples/standings/` and `/examples/monitor/` show 25 simulated players.
+These pages make no Match Play requests and do not change tournament records.
 
 Here's how to build the public snapshot locally:
 

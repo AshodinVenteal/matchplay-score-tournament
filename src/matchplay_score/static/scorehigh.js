@@ -33,6 +33,7 @@
           : 'plain';
     document.documentElement.dataset.scoreFont = selected;
     scoreFontSelect.value = selected;
+    formatScoreSeparators();
   };
   setScoreFont(readSetting('scorehigh-score-font'));
   scoreFontSelect.addEventListener('change', () => {
@@ -99,10 +100,17 @@
   openFormat();
 
   // Keep commas readable when a display font uses a custom separator
-  const formatScoreSeparators = () => {
+  function formatScoreSeparators() {
+    const segmented =
+      document.documentElement.dataset.scoreFont === 'segmented' ||
+      document.documentElement.dataset.monitor === 'true';
     all(
-      '.score-info > strong, .podium-total, .adjusted-score, .breakdown-total > strong, .history-total, .score-formula strong, .comparison-row > strong, .player-stats > div:nth-child(2) > strong, .score-font-preview > strong',
+      '.monitor-game-score, .score-info > strong, .podium-total, .adjusted-score, .breakdown-total > strong, .history-total, .score-formula strong, .comparison-row > strong, .player-stats > div:nth-child(2) > strong, .score-font-preview > strong',
     ).forEach((score) => {
+      if (!segmented) {
+        if (score.querySelector('.score-comma')) score.textContent = score.textContent;
+        return;
+      }
       if (score.querySelector('.score-comma') || !score.textContent.includes(',')) return;
       const parts = score.textContent.split(',');
       score.setAttribute('aria-label', score.textContent);
@@ -120,7 +128,7 @@
         score.append(document.createTextNode(part));
       });
     });
-  };
+  }
   formatScoreSeparators();
 
   // Standings ticker and published snapshot updates
@@ -159,7 +167,6 @@
       checking = true;
       try {
         const response = await fetch(location.href, {
-          cache: 'no-store',
           signal: AbortSignal.timeout(20000),
         });
         if (!response.ok) return;
@@ -321,6 +328,13 @@
   if (!status) return;
   const refreshButton = one('[data-refresh]');
   const autoButton = one('[data-auto]');
+  if (document.documentElement.dataset.examples === 'true') {
+    one('[data-refresh-controls]').hidden = false;
+    refreshButton.hidden = true;
+    autoButton.hidden = true;
+    status.textContent = 'Simulated results - no live updates';
+    return;
+  }
   let auto = monitor || readSetting('scorehigh-auto') !== 'off';
   let busy = false;
   let lastUpdated = new Date(status.dataset.updatedAt);
@@ -337,10 +351,11 @@
         day: 'numeric',
         year: 'numeric',
       });
-      status.textContent = `Snapshot: ${date}, ${time} · ${auto ? 'checks every 60s.' : 'checks paused.'}`;
+      status.textContent = `Snapshot: ${date}, ${time} · ${auto ? 'checks every 10s.' : 'checks paused.'}`;
     } else {
-      status.textContent = `Snapshot: ${time} · ${auto ? 'checks every 60s.' : 'checks paused.'}`;
+      status.textContent = `Snapshot: ${time} · ${auto ? 'checks every 10s.' : 'checks paused.'}`;
     }
+    if (status.dataset.cached === 'true') status.textContent += ' Cached scores; retrying.';
   };
   const refresh = async (manual = false) => {
     if (busy || (!manual && (!auto || document.hidden))) return;
@@ -352,7 +367,6 @@
     status.textContent = staticSnapshot ? 'Checking published scores…' : 'Fetching scores…';
     try {
       const response = await fetch(location.href, {
-        cache: 'no-store',
         headers: { 'X-Requested-With': 'ScoreHigh' },
         signal: AbortSignal.timeout(25000),
       });
@@ -381,6 +395,7 @@
       monitorDisplay.layout();
       window.scrollTo({ top: scrollY, behavior: 'instant' });
       lastUpdated = new Date(timestamp.dataset.updatedAt);
+      status.dataset.cached = timestamp.dataset.cached || 'false';
       failed = false;
       delete status.dataset.error;
     } catch {
@@ -401,9 +416,9 @@
     saveSetting('scorehigh-auto', auto ? 'on' : 'off');
     updateStatus();
   });
-  setInterval(() => refresh(), 60000);
+  setInterval(() => refresh(), 10000);
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && Date.now() - lastUpdated.getTime() >= 60000) refresh();
+    if (!document.hidden && Date.now() - lastUpdated.getTime() >= 10000) refresh();
   });
   updateStatus();
 })();

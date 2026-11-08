@@ -115,7 +115,7 @@
                         <span class="machine-chips player-game-banners">{{ game_banners(card, compact=True) }}</span>
                     </div>
 
-                    <div class="monitor-games" aria-label="Machines played">{{ game_banners(card) }}</div>
+                    <div class="monitor-games" aria-label="Machines played and raw scores">{{ game_banners(card, scores=True) }}</div>
 
                     {% include "player_controls.html" %}
                     <details class="card-details" id="breakdown-{{ card|card_key }}">
@@ -142,8 +142,8 @@
 
         </div>
 
-        <p class="update-status" data-refresh-status role="status" data-updated-at="{{ updated_at }}" {% if
-            static_snapshot %}data-static-snapshot="true" {% endif %}>Snapshot: {{ updated_at }} · checks every 60s.</p>
+        <p class="update-status" data-refresh-status role="status" data-cached="{{ 'true' if cached_scores else 'false' }}" data-updated-at="{{ updated_at }}" {% if
+            static_snapshot %}data-static-snapshot="true" {% endif %}>Snapshot: {{ updated_at }} · checks every 10s.</p>
     </section>
 
     <aside class="sidebar" aria-label="Tournament reference">
