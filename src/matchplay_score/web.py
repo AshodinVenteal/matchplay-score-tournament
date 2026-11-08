@@ -23,7 +23,7 @@ from .tournament import (
 
 app = Flask(__name__)
 register_examples(app)
-APP_VERSION = version("matchplay-score") + "-monitor-flyers-1"
+APP_VERSION = version("matchplay-score") + "-atkinson-text-1"
 TOURNAMENT_INFO = {
     281672: "Test Tournament",
     282316: "Score High for Trans Lives",

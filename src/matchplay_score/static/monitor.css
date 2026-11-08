@@ -15,11 +15,10 @@
   background:var(--paper);
   color:var(--ink);
   box-shadow:0 6px 18px #0003;
-  font:14px/1.5 system-ui,sans-serif;
+  font:14px/1.5 var(--text-font);
 }
 .monitor-settings-menu label { display:flex; align-items:center; gap:8px; }
 .monitor-settings-menu input { width:18px; height:18px; }
-.monitor-settings-menu small { display:block; margin-top:8px; color:var(--muted); }
 .podium-game { position:relative; isolation:isolate; }
 .podium-flyer {
   display:none;
@@ -487,7 +486,7 @@ html[data-monitor=true] .monitor-games {
   gap: 5px;
   padding: 0 24px 4px 97px;
   color: var(--muted);
-  font: 16px/1.4 system-ui,sans-serif;
+  font: 16px/1.4 var(--text-font);
 }
 
 @media (min-width:1600px) {
@@ -553,7 +552,7 @@ html[data-monitor=true] .monitor-era-legend {
 }
 
 html[data-monitor=true] .monitor-era-legend .era {
-  font: 600 14px/1.4 system-ui,sans-serif;
+  font: 600 14px/1.4 var(--text-font);
   padding: 4px 10px;
 }
 
@@ -1012,7 +1011,7 @@ html[data-monitor=true] .monitor-era-legend .era {
     grid-column: 2;
     grid-row: 1;
     align-self: end;
-    font: 750 clamp(20px,1.65vw,34px)/1.2 system-ui,sans-serif;
+    font: 750 clamp(20px,1.65vw,34px)/1.2 var(--text-font);
     overflow-wrap: anywhere;
   }
 
@@ -1067,7 +1066,7 @@ html[data-monitor=true] .monitor-era-legend .era {
     grid-column: 2;
     grid-row: 1;
     width: clamp(44px,3.6vw,68px);
-    font: 600 clamp(7px,.5vw,10px)/1.2 system-ui,sans-serif;
+    font: 600 clamp(7px,.5vw,10px)/1.2 var(--text-font);
     color: var(--muted);
   }
 
