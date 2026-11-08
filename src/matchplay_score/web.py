@@ -24,7 +24,7 @@ from .tournament import (
 
 app = Flask(__name__)
 register_examples(app)
-APP_VERSION = version("matchplay-score") + "-obs-cards-5"
+APP_VERSION = version("matchplay-score") + "-obs-cards-6"
 TOURNAMENT_INFO = {
     281672: "Test Tournament",
     282316: "Score High for Trans Lives",
@@ -165,7 +165,13 @@ def render_overlay(tournament_id: int):
     options = overlay_options()
     try:
         cards = tournament_cards(tournament_id)
-    except requests.RequestException:
+    except requests.RequestException as error:
+        app.logger.warning(
+            "OBS snapshot unavailable: tournament=%s error=%s reason=%s; no Match Play request made",
+            tournament_id,
+            type(error).__name__,
+            str(error) or "No saved scores available",
+        )
         # Even a cold-start outage must leave OBS with a transparent, retrying view.
         return render_template(
             "overlay.html",
@@ -279,7 +285,12 @@ def render_how_it_works(tournament_id: int):
 
 @app.errorhandler(requests.RequestException)
 def upstream_error(error):
-    print(error)
+    app.logger.error(
+        "Tournament data unavailable: path=%s; error=%s",
+        request.path,
+        type(error).__name__,
+        exc_info=(type(error), error, error.__traceback__),
+    )
     return (
         render_template(
             "error.html",
