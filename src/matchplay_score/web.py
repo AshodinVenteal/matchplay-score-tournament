@@ -29,7 +29,7 @@ from .tournament import (
 
 app = Flask(__name__)
 register_examples(app)
-APP_VERSION = version("matchplay-score") + "-refresh-status-1"
+APP_VERSION = version("matchplay-score") + "-invalid-standings-1"
 TOURNAMENT_INFO = {
     281672: "Test Tournament",
     282316: "Score High for Trans Lives",
@@ -201,7 +201,7 @@ def render_overlay(tournament_id: int):
 
 
 def standings_page(tournament_id: int, *, monitor: bool = False):
-    cards = best_cards(tournament_id, use_cache=True)
+    cards = best_cards(tournament_id, use_cache=True, include_invalid=not monitor)
     title = tournament_title(tournament_id)
     return render_template(
         "ranking.html",

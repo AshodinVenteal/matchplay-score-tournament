@@ -25,6 +25,30 @@ def test_invalid_only_means_too_many_games_in_a_category():
     assert partial.history_status() == "Card in progress"
 
 
+def test_standings_can_keep_invalid_only_players_without_replacing_valid_cards():
+    valid = Card("Alice", games(["old", "mid"]), card_id=1)
+    invalid_alice = Card("Alice", games(["mid"] * 3), card_id=2, status="completed")
+    invalid_bob = Card("Bob", games(["old"] * 3), card_id=3, status="completed")
+    newer_bob = Card("Bob", games(["new"] * 3), card_id=4, status="completed")
+    voided = Card("Carol", games(["old"]), card_id=5, voided=True)
+    entries = [invalid_bob, invalid_alice, valid, newer_bob, voided]
+    tournament = {"players": [], "arenas": []}
+    for include_invalid in (False, True):
+        with (
+            patch.object(
+                ranking, "get_tournament_data_cached", return_value=tournament
+            ) as roster,
+            patch.object(
+                ranking, "get_cards", return_value=[{}] * len(entries)
+            ) as cards,
+            patch.object(ranking, "parse_card", side_effect=entries),
+        ):
+            result = ranking.best_cards(1, include_invalid=include_invalid)
+        assert result == ([valid, newer_bob, voided] if include_invalid else [valid])
+        roster.assert_called_once()
+        cards.assert_called_once()
+
+
 def test_newer_card_does_not_void_an_older_incomplete_card():
     tournament = {"players": [{"playerId": 1, "name": "Test Player"}], "arenas": []}
     old = Card("Test Player", games(["old"]), card_id=1, created_at="2026-11-01")
