@@ -1,5 +1,40 @@
 /* Event display, podium, pagination, and viewport sizing. */
 
+.monitor-display-settings { position:relative; }
+.monitor-display-settings > summary { list-style:none; cursor:pointer; }
+.monitor-display-settings > summary::-webkit-details-marker { display:none; }
+.monitor-settings-menu {
+  position:absolute;
+  right:0;
+  top:calc(100% + 8px);
+  z-index:20;
+  width:260px;
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:5px;
+  background:var(--paper);
+  color:var(--ink);
+  box-shadow:0 6px 18px #0003;
+  font:14px/1.5 system-ui,sans-serif;
+}
+.monitor-settings-menu label { display:flex; align-items:center; gap:8px; }
+.monitor-settings-menu input { width:18px; height:18px; }
+.monitor-settings-menu small { display:block; margin-top:8px; color:var(--muted); }
+.podium-game { position:relative; isolation:isolate; }
+.podium-flyer {
+  display:none;
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center 35%;
+  opacity:.1;
+  z-index:-1;
+  pointer-events:none;
+}
+html[data-monitor=true][data-monitor-flyers=on] .podium-flyer { display:block; }
+
 html[data-monitor=true] { --monitor-qr-size:111px; }
 
 html[data-monitor=true] .monitor-site-link {

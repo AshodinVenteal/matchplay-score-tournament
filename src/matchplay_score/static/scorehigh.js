@@ -76,14 +76,43 @@
     saveSetting('scorehigh-theme', themePreference);
   });
   systemTheme.addEventListener('change', setTheme);
-  const displaySettings = one('.display-settings');
+
+  // Flyer artwork is opt-in and only downloaded for the monitor display.
+  let monitorFlyers = readSetting('scorehigh-monitor-flyers') === 'on';
+  const flyerToggles = all('[data-monitor-flyers]');
+  const applyMonitorFlyers = () => {
+    document.documentElement.dataset.monitorFlyers = monitorFlyers ? 'on' : 'off';
+    flyerToggles.forEach((toggle) => {
+      toggle.checked = monitorFlyers;
+    });
+    if (!monitor || !monitorFlyers) return;
+    all('.podium-flyer[data-flyer-src]').forEach((image) => {
+      if (!image.hasAttribute('src')) image.src = image.dataset.flyerSrc;
+    });
+  };
+  flyerToggles.forEach((toggle) => {
+    toggle.addEventListener('change', () => {
+      monitorFlyers = toggle.checked;
+      saveSetting('scorehigh-monitor-flyers', monitorFlyers ? 'on' : 'off');
+      applyMonitorFlyers();
+    });
+  });
+  applyMonitorFlyers();
+
+  const displaySettings = all('.display-settings, .monitor-display-settings');
   document.addEventListener('click', (event) => {
-    if (!displaySettings.contains(event.target)) displaySettings.open = false;
+    displaySettings.forEach((settings) => {
+      if (!settings.contains(event.target)) settings.open = false;
+    });
   });
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && displaySettings.open) {
-      displaySettings.open = false;
-      one('summary', displaySettings).focus();
+    if (event.key === 'Escape') {
+      displaySettings
+        .filter((settings) => settings.open)
+        .forEach((settings) => {
+          settings.open = false;
+          one('summary', settings).focus();
+        });
     }
   });
 
@@ -409,6 +438,7 @@
       });
       const scrollY = window.scrollY;
       current.replaceWith(incoming);
+      applyMonitorFlyers();
       formatAddedTimes();
       all('.ranking-entry .card-details').forEach(syncCardToggle);
       formatScoreSeparators();

@@ -150,6 +150,11 @@ def main(page_kind="all"):
         "/static/images/score-arborelia-qr.svg",
         data_url(static / "images/score-arborelia-qr.svg"),
     )
+    html = re.sub(
+        r'data-flyer-src="/static/([^"]+)"',
+        lambda match: 'data-flyer-src="' + data_url(static / match.group(1)) + '"',
+        html,
+    )
     monitor_script = (static / "monitor.js").read_text(encoding="utf-8")
     html = re.sub(
         r'<script src="/static/monitor.js(?:\?[^" ]*)?" defer></script>', "", html

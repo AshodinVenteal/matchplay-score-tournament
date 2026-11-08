@@ -9,6 +9,7 @@ from flask import Flask, abort, g, render_template, request
 
 from .branding import REPOSITORY_DESCRIPTION, SITE_DESCRIPTION, SITE_TITLE
 from .examples import register_examples
+from .flyers import FLYER_IMAGES
 from .matchplay_api import get_tournament_data_cached, snapshot_status
 from .ranking import best_cards, player_cards
 from .tournament import (
@@ -22,7 +23,7 @@ from .tournament import (
 
 app = Flask(__name__)
 register_examples(app)
-APP_VERSION = version("matchplay-score") + "-monitor-qr-1"
+APP_VERSION = version("matchplay-score") + "-monitor-flyers-1"
 TOURNAMENT_INFO = {
     281672: "Test Tournament",
     282316: "Score High for Trans Lives",
@@ -80,6 +81,7 @@ def site_context():
         "matchplay_urls": tournament_matchplay_urls(),
         "static_snapshot": bool(app.config.get("SNAPSHOT_AT")),
         "cached_scores": getattr(g, "cached_scores", False),
+        "flyer_images": FLYER_IMAGES,
     }
 
 

@@ -8,7 +8,15 @@
         type="button" data-monitor-prev aria-label="Previous standings page">←</button><span data-monitor-page
         role="status"></span><button class="framed-button" type="button" data-monitor-next
         aria-label="Next standings page">→</button><button class="framed-button" type="button" data-monitor-rotate
-        aria-pressed="true">Rotate: on</button></div>
+        aria-pressed="true">Rotate: on</button>
+    <details class="monitor-display-settings">
+        <summary class="framed-button">Settings</summary>
+        <div class="monitor-settings-menu">
+            <label><input type="checkbox" data-monitor-flyers> Flyer backgrounds</label>
+            <small>10% artwork behind each game in the top three cards.</small>
+        </div>
+    </details>
+</div>
 
 <div class="workspace">
     <nav class="portal-directory panel" aria-label="Pinball directory">
@@ -67,6 +75,8 @@
                         %}</span><span>Points</span></div>
 
                     {% for game in card.games %}<div class="podium-game">
+                        {% set flyer = flyer_images.get(game.game_name) %}
+                        {% if flyer %}<img class="podium-flyer" data-flyer-src="{{ url_for('static', filename=flyer) }}" alt="" aria-hidden="true">{% endif %}
                         <div>{{ game_banner(game) }}<small class="podium-calculation"><span class="podium-raw">{{
                                     game.score|commafy }}</span><span class="podium-multiplier">× {{ game.multiplier
                                     }}</span></small></div>
