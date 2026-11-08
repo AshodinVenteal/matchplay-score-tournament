@@ -389,7 +389,7 @@
   let busy = false;
   let lastUpdated = new Date(status.dataset.updatedAt);
   const staticSnapshot = status.dataset.staticSnapshot === 'true';
-  const checkInterval = 25000;
+  const checkInterval = 60000;
   let failures = 0;
   let failure = '';
   let sourceState = status.dataset.sourceState || 'ready';
@@ -448,7 +448,7 @@
         : `Automatic checks paused. ${wait ? `Refresh available in ${wait}s.` : 'Use Refresh to check.'}`;
       status.textContent = `${snapshot} · ${savedAge()} · ${detail} ${retry}`;
     } else {
-      status.textContent = `${snapshot} · ${auto ? 'checks every 25s.' : 'checks paused.'}`;
+      status.textContent = `${snapshot} · ${auto ? 'checks every 60s.' : 'checks paused.'}`;
     }
     if (reason) status.dataset.error = 'true';
     else delete status.dataset.error;
@@ -475,7 +475,7 @@
       const response = await fetch(location.href, {
         headers: { 'X-Requested-With': 'ScoreHigh' },
         cache: 'no-cache',
-        signal: AbortSignal.timeout(25000),
+        signal: AbortSignal.timeout(60000),
       });
       if (!response.ok) {
         const retry = response.headers.get('Retry-After');

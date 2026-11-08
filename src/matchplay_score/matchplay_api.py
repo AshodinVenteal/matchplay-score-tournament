@@ -15,7 +15,8 @@ from vercel.cache import RuntimeCacheError
 from vercel.functions import RuntimeCache
 
 API_ORIGIN = "https://api.matchplay.events"
-LIVE_TTL = 25
+API_KEY = os.environ.get("MATCHPLAY_API_KEY")
+LIVE_TTL = 60
 STALE_TTL = 3600
 _cache = {}
 _lock = RLock()
@@ -24,6 +25,11 @@ _failures = 0
 _runtime = None
 _session = requests.Session()
 _session.headers.update({"User-Agent": "ScoreHigh/1.1", "Accept": "application/json"})
+if API_KEY is None:
+    logger.error("No Matchplay API key")
+else:
+    logger.info(f"Matchplay API key: {API_KEY}")
+    _session.headers["Authorization"] = f"Bearer {API_KEY}"
 
 
 class ScoreCacheUnavailable(requests.RequestException):
