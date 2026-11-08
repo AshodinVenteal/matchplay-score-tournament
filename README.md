@@ -62,6 +62,12 @@ limit are greyed out with the reason and scorekeeper correction instructions;
 the site never erases scores itself. Monitor ranking rows show each machine's
 raw score beneath its tile.
 
+Monitor Settings includes an optional Flyer backgrounds checkbox, off by default.
+When enabled, each game row in the top three expanded cards shows its matching
+promotional flyer at 10% opacity. Images are bundled locally and are requested
+only when the setting is enabled on the monitor. Source links are retained in
+`static/images/flyers/sources.json`. This setting does not request Match Play data.
+
 The `/examples/` page shows simulated valid, invalid, voided, and in-progress
 cards. `/examples/standings/` and `/examples/monitor/` show 25 simulated players.
 These pages make no Match Play requests and do not change tournament records.

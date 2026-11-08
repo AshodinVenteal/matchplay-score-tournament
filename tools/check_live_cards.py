@@ -112,14 +112,33 @@ def main():
                 (1024, 768),
                 (1280, 720),
                 (1366, 768),
+                (1440, 900),
                 (1600, 900),
                 (1920, 1080),
+                (2560, 1440),
             ]:
                 page.set_viewport_size({"width": width, "height": height})
                 page.goto(f"http://127.0.0.1:{server.server_port}/examples/monitor/")
                 page.wait_for_timeout(100)
                 failures = page.evaluate(GEOMETRY)
                 assert not failures, (width, height, failures)
+                expect(page.locator(".monitor-site-link")).to_be_visible()
+                assert page.locator(".monitor-qr").evaluate(
+                    "el => el.complete && el.naturalWidth > 0"
+                )
+                assert page.evaluate(
+                    "document.fonts.check('700 40px \"Arborelia Header\"')"
+                )
+                assert page.locator(".monitor-site-link").evaluate("""el => {
+                    const image = el.querySelector('img').getBoundingClientRect();
+                    const label = el.querySelector('span');
+                    const text = label.getBoundingClientRect();
+                    return text.top >= image.bottom && Math.abs(text.width - image.width) < 1
+                        && label.scrollWidth <= label.clientWidth + 1;
+                }""")
+                assert page.locator(".tournament-heading h1").evaluate(
+                    "el => Math.abs((el.getBoundingClientRect().left + el.getBoundingClientRect().right) / 2 - innerWidth / 2) < 1"
+                )
                 scores = page.locator(".ranking-entry:visible .monitor-game-score")
                 assert scores.evaluate_all(
                     "els => els.every(el => getComputedStyle(el).fontFamily.includes('monospace') && el.scrollWidth <= el.clientWidth + 1)"

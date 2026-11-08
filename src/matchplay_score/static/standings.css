@@ -20,7 +20,7 @@
   padding: 2px 4px 8px;
   border: 1px solid currentColor;
   border-radius: 2px;
-  font: 600 10px/1.1 system-ui, sans-serif;
+  font: 600 10px/1.1 var(--text-font);
   text-align: center;
   white-space: normal;
 }
@@ -34,7 +34,7 @@
   position: absolute;
   right: 3px;
   bottom: 1px;
-  font: 600 7px/1.2 system-ui, sans-serif;
+  font: 600 7px/1.2 var(--text-font);
 }
 
 .monitor-game-block.game-slot-empty {
