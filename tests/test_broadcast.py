@@ -2,9 +2,10 @@ from dataclasses import replace
 from unittest.mock import patch
 
 import requests
+import pytest
 
-from matchplay_score import broadcast, web
-from matchplay_score.examples import example_history
+from matchplay_score import broadcast, matchplay_api as api, web
+from matchplay_score.examples import example_history, example_standings
 from matchplay_score.tournament import Card, SinglePlayerGame
 
 
@@ -32,6 +33,16 @@ def test_recent_order_uses_latest_game_submission_not_card_creation_or_total():
     assert all(rank == 1 for card, rank in selected)
 
 
+def test_cycle_queues_recent_cards_then_top_three():
+    entries = broadcast.overlay_entries(example_standings(), "cycle", 5)
+    assert [section for card, rank, section in entries] == ["recent"] * 5 + ["top"] * 3
+    assert [rank for card, rank, section in entries if section == "top"] == [1, 2, 3]
+    client = web.app.test_client()
+    recent = client.get("/examples/overlay/?mode=recent").text
+    assert 'class="broadcast-rank"' not in recent
+    assert 'class="broadcast-rank">#1' in client.get("/examples/overlay/?mode=top").text
+
+
 def test_overlay_reads_one_complete_shared_snapshot():
     data = {
         "tournament": {
@@ -51,18 +62,66 @@ def test_overlay_reads_one_complete_shared_snapshot():
         ],
     }
     with patch.object(
-        broadcast, "get_tournament_snapshot", return_value=data
+        broadcast, "get_cached_tournament_snapshot", return_value=data
     ) as snapshot:
         cards = broadcast.tournament_cards(281672)
     snapshot.assert_called_once_with(281672)
     assert cards[0].computed_score() == 500000
 
 
+@pytest.mark.parametrize(
+    "age, expected", [(0, 200), (30, 200), (3601, 503), (None, 503)]
+)
+def test_obs_never_fetches_matchplay_even_when_cache_is_stale_or_missing(
+    monkeypatch, age, expected
+):
+    monkeypatch.setattr(api, "time", lambda: 10000)
+    if age is not None:
+        api._cache["tournament:281672"] = {
+            "fetched_at": 10000 - age,
+            "tournament": {
+                "players": [{"playerId": 1, "name": "Saved Player"}],
+                "arenas": [
+                    {
+                        "arenaId": 1,
+                        "name": "Stars",
+                        "tournamentArena": {"status": "active"},
+                    }
+                ],
+            },
+            "cards": [
+                {
+                    "cardId": 1,
+                    "playerId": 1,
+                    "singlePlayerGames": [
+                        {"arenaId": 1, "playerId": 1, "score": 1000},
+                    ],
+                }
+            ],
+        }
+    with (
+        patch.object(
+            api,
+            "get_tournament_snapshot",
+            side_effect=AssertionError("OBS must not refresh"),
+        ),
+        patch.object(
+            api._session,
+            "get",
+            side_effect=AssertionError("OBS must not call Match Play"),
+        ) as network,
+    ):
+        response = web.app.test_client().get("/overlay/281672?mode=cycle")
+    assert response.status_code == expected
+    network.assert_not_called()
+    assert ("Saved Player" in response.text) == (expected == 200)
+
+
 def test_setup_and_demos_do_not_read_matchplay():
     client = web.app.test_client()
     with patch.object(
         broadcast,
-        "get_tournament_snapshot",
+        "get_cached_tournament_snapshot",
         side_effect=AssertionError("Unexpected API read"),
     ):
         for path in [
@@ -90,7 +149,7 @@ def test_overlay_options_are_bounded_and_names_escaped():
     assert "<script>bad()</script>" not in html
     with web.app.test_request_context("/?mode=other&seconds=-1&count=999"):
         assert broadcast.overlay_options() == {
-            "mode": "recent",
+            "mode": "cycle",
             "count": 10,
             "seconds": 8,
         }

@@ -91,7 +91,7 @@ def test_new_scores_available_after_fifteen_seconds(upstream):
     assert get.call_count == 4
 
 
-def test_rate_limit_preserves_cards_and_timestamp(upstream):
+def test_rate_limit_preserves_cards_and_timestamp(upstream, caplog):
     clock, get, _ = upstream
     api.get_cards(123)
     original = api.snapshot_status(123)[0]
@@ -103,6 +103,8 @@ def test_rate_limit_preserves_cards_and_timestamp(upstream):
     assert api.snapshot_status(123) == (original, True)
     assert api.get_cards(123) == [{"cardId": 1}]
     assert get.call_count == 3
+    assert "status=429" in caplog.text
+    assert "cooldown_seconds=120" in caplog.text
     with pytest.raises(requests.HTTPError, match="cooldown"):
         api.get_cards(999)
     assert get.call_count == 3
@@ -142,6 +144,14 @@ def test_vercel_workers_reuse_shared_runtime_cache(upstream, monkeypatch):
     monkeypatch.setattr(api, "_shared", lambda: shared)
     api.get_cards(123)
     api._cache.clear()
+    clock = upstream[0]
+    clock[0] += 30
+    assert api.get_cached_tournament_snapshot(123)["cards"] == [{"cardId": 1}]
+    assert get.call_count == 2
+    clock[0] += api.STALE_TTL
+    assert api.get_cached_tournament_snapshot(123) is None
+    assert get.call_count == 2
+    clock[0] = 1000
     assert api.get_cards(123) == [{"cardId": 1}]
     assert get.call_count == 2
 

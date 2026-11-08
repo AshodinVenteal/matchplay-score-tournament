@@ -100,17 +100,32 @@ def _fetch(url):
         response = _session.get(url, timeout=(5, 15))
         response.raise_for_status()
         return response.json()
-    except requests.RequestException, ValueError:
+    except (requests.RequestException, ValueError) as error:
         _failures = min(6, max(_failures, state.get("failures", 0)) + 1)
         delay = min(900, 60 * 2 ** (_failures - 1))
         if response is not None and response.status_code == 429:
             delay = max(delay, retry_seconds(response.headers.get("Retry-After")))
+        logger.warning(
+            "Match Play request failed: path=%s status=%s error=%s cooldown_seconds=%s",
+            urlsplit(url).path,
+            response.status_code if response is not None else "unavailable",
+            type(error).__name__,
+            delay,
+        )
         _cooldown_until = time() + delay
         _write(
             "rate-state",
             {"cooldown": _cooldown_until, "failures": _failures},
         )
         raise
+
+
+def get_cached_tournament_snapshot(tournament_id):
+    """Read an existing snapshot without refreshing or contacting Match Play."""
+    saved = _read(f"tournament:{tournament_id}")
+    if saved and time() - saved["fetched_at"] < STALE_TTL:
+        return saved
+    return None
 
 
 def get_tournament_snapshot(tournament_id):

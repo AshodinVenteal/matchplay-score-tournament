@@ -1,16 +1,17 @@
 """Card selection and display options for streaming overlays."""
 
 from flask import request
+from requests import RequestException
 
-from .matchplay_api import get_tournament_snapshot
+from .matchplay_api import get_cached_tournament_snapshot
 from .tournament import Card, creation_order, parse_card, parse_tournament
 
 
 def overlay_options():
-    mode = request.args.get("mode", "recent")
-    if mode not in {"recent", "top"}:
-        mode = "recent"
-    count = request.args.get("count", 5 if mode == "recent" else 3, type=int)
+    mode = request.args.get("mode", "cycle")
+    if mode not in {"cycle", "recent", "top"}:
+        mode = "cycle"
+    count = request.args.get("count", 3 if mode == "top" else 5, type=int)
     seconds = request.args.get("seconds", 12, type=int)
     return {
         "mode": mode,
@@ -44,8 +45,23 @@ def select_cards(cards, mode, count):
     return [(card, ranks[card.player_name]) for card in selected[:count]]
 
 
+def overlay_entries(cards, mode, count):
+    sections = (
+        [("recent", count), ("top", min(3, count))]
+        if mode == "cycle"
+        else [(mode, count)]
+    )
+    return [
+        (card, rank, section)
+        for section, limit in sections
+        for card, rank in select_cards(cards, section, limit)
+    ]
+
+
 def tournament_cards(tournament_id):
-    # Read the same complete snapshot as standings; never fetch per player/card.
-    snapshot = get_tournament_snapshot(tournament_id)
+    # OBS only consumes snapshots saved by the site; it cannot refresh Match Play.
+    snapshot = get_cached_tournament_snapshot(tournament_id)
+    if snapshot is None:
+        raise RequestException("Waiting for a saved tournament snapshot")
     tournament = parse_tournament(snapshot["tournament"])
     return [parse_card(item, tournament) for item in snapshot["cards"]]
