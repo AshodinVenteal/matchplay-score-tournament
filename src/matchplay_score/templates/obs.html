@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="panel obs-setup">
+  <div class="panel-bar"><h2>OBS browser source</h2></div>
+  <div class="obs-layout">
+    <div>
+      <p>One card at a time, sized for the player panel above your stream camera.</p>
+      <form data-obs-form>
+        <label>Cards to show
+          <select name="mode">
+            <option value="recent">Most recently updated cards</option>
+            <option value="top">Top cards · one per player</option>
+          </select>
+        </label>
+        <label>Number of cards <input name="count" type="number" min="1" max="10" value="5" required></label>
+        <label>Seconds per card <input name="seconds" type="number" min="8" max="60" value="12" required></label>
+        <button class="framed-button" type="submit">Update preview</button>
+      </form>
+      <label class="obs-url-label">Browser source URL <input data-obs-url type="url" readonly aria-label="Browser source URL"></label>
+      <div class="obs-actions"><button class="framed-button" type="button" data-obs-copy>Copy URL</button><a class="framed-button" data-obs-open href="{{ url_for('render_overlay', tournament_id=tournament_id) }}" target="_blank" rel="noopener">Open overlay ↗</a></div>
+      <p data-obs-copy-status role="status"></p>
+      <p>In OBS, add a <strong>Browser</strong> source, paste this URL, and set its size to <strong>640 × 270</strong>. Position it in the upper-right player panel. On a 1440 × 810 canvas, use <strong>480 × 200</strong>.</p>
+      <p>Recent cards includes cards in progress, ordered by their latest submitted game. Top cards uses each player's highest valid card. Voided and invalid cards stay off the stream.</p>
+      <p>Checks for scores every 15 seconds. The current card stays visible if updates are unavailable.</p>
+      <a href="{{ url_for('render_ranking', tournament_id=tournament_id) }}">Back to standings</a>
+    </div>
+    <div class="obs-preview-wrap"><iframe title="OBS card preview" data-obs-preview src="{{ url_for('render_overlay', tournament_id=tournament_id) }}" width="640" height="270"></iframe></div>
+  </div>
+</section>
+<link rel="stylesheet" href="{{ url_for('static', filename='obs.css', v=asset_version) }}">
+<script src="{{ url_for('static', filename='obs.js', v=asset_version) }}" defer></script>
+{% endblock %}

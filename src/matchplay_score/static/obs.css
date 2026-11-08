@@ -1,0 +1,12 @@
+.obs-layout { display: grid; grid-template-columns: minmax(250px, 1fr) minmax(280px, 480px); gap: 30px; padding: 20px; }
+.obs-setup p { line-height: 1.5; }
+.obs-setup form { display: flex; flex-direction: column; gap: 14px; margin: 20px 0; }
+.obs-setup label { display: flex; flex-direction: column; gap: 6px; }
+.obs-setup input, .obs-setup select { width: 100%; font: inherit; color: inherit; background: var(--paper); border: 1px solid var(--line); padding: 10px; }
+.obs-setup form button { align-self: start; }
+.obs-url-label { margin: 20px 0 10px; }
+.obs-url-label input { font-family: monospace; font-size: 13px; }
+.obs-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.obs-preview-wrap { aspect-ratio: 640 / 270; width: 100%; overflow: hidden; background: repeating-conic-gradient(#555 0% 25%, #666 0% 50%) 50% / 24px 24px; }
+.obs-preview-wrap iframe { display: block; border: 0; width: 640px; height: 270px; transform-origin: top left; }
+@media(max-width: 760px) { .obs-layout { grid-template-columns: 1fr; padding: 14px; gap: 20px; } }
