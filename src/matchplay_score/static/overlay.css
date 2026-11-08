@@ -40,7 +40,7 @@ body {
 .broadcast-era-new { --era-color: #a8def0; }
 .broadcast-machine { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 8px; min-width: 0; }
 .broadcast-machine strong { font-size: clamp(14px, 3.2vw, 21px); overflow-wrap: anywhere; }
-.broadcast-era { color: var(--era-color); font-size: 11px; margin-left: auto; }
+.broadcast-era { color: var(--era-color); font-size: 18px; font-weight: 700; line-height: 1.1; margin-left: auto; padding: 2px 4px; border: 1px solid color-mix(in srgb, var(--era-color) 45%, transparent); border-radius: 3px; background: #1d1c25; }
 .broadcast-calculation { font-size: clamp(11px, 2.4vw, 16px); align-self: center; }
 .broadcast-calculation span { color: #c4bfce; font-size: .85em; white-space: nowrap; }
 .broadcast-points { text-align: right; font-size: clamp(13px, 3.2vw, 22px); }
@@ -83,9 +83,9 @@ body {
   .broadcast-game { display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 4px 7px; min-width: 0; }
   .broadcast-machine { gap: 4px; width: 100%; }
   .broadcast-machine strong { font-size: clamp(11px, 5.2vh, 16px); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .broadcast-era { position: absolute; right: 5px; bottom: 3px; font-size: 8px; }
+  .broadcast-era { position: absolute; right: 5px; bottom: 4px; font-size: clamp(14px, 2.5vw, 18px); }
   .broadcast-calculation { align-self: start; font-size: clamp(9px, 3.8vh, 12px); line-height: 1.1; white-space: nowrap; }
-  .broadcast-points { text-align: left; font-size: clamp(13px, 6.5vh, 22px); line-height: 1.1; padding-right: 16px; }
+  .broadcast-points { text-align: left; font-size: clamp(13px, 6.5vh, 22px); line-height: 1.1; padding-right: 44px; }
   .broadcast-points::after { content: ' pts'; font: 8px var(--text-font); color: #c4bfce; }
   .broadcast-last-label { position: static; order: -1; font-size: 8px; line-height: 1; color: #f0c6d7; }
   .broadcast-last-game .broadcast-era { padding-right: 0; }
