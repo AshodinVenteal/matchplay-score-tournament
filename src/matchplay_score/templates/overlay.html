@@ -17,7 +17,7 @@
         {% set last = card.last_added_game() %}
         <article class="broadcast-card" data-card-id="{{ card.card_id or card.player_name }}" {% if not loop.first %}hidden{% endif %}>
           <header class="broadcast-player">
-            <div class="broadcast-player-heading"><span class="broadcast-rank">#{{ rank }}</span><h2>{{ card.player_name }}</h2></div>
+            <div class="broadcast-player-heading">{% if options.mode == 'top' %}<span class="broadcast-rank">#{{ rank }}</span>{% endif %}<h2>{{ card.player_name }}</h2></div>
             <p>{{ card.history_status() }} · {{ card.games|length }}/{{ card_game_limit }} games
               {% if last and last.created_at %}<span class="broadcast-submitted">Last score <time datetime="{{ last.created_at }}">{{ last.created_at|added_time }}</time></span>{% endif %}
             </p>
