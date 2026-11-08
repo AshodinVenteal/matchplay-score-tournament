@@ -1,5 +1,7 @@
 {% macro breakdown(card, show_added=False) %}
 {% set last_game = card.last_added_game() if show_added else none %}
+{% set invalid = card.history_status() == 'Invalid' %}
+{% if invalid %}<div class="invalid-card-breakdown">{% endif %}
 <div class="game-breakdown">
 <div class="breakdown-heading"><span>Machine / raw score × multiplier</span><span>Adjusted points</span></div>
 {% for game in card.games %}
@@ -21,4 +23,12 @@
 {% endfor %}
 <div class="breakdown-total"><span>Card total{% if not card.is_valid() %} · excluded{% endif %}</span><strong>{{ card.computed_score()|commafy }}</strong></div>
 </div>
+{% if invalid %}
+<div class="invalid-card-overlay" role="note">
+    <strong>Invalid card · excluded from ranking</strong>
+    <p>{% for reason in card.invalid_reasons() %}{{ reason }} {% endfor %}</p>
+    <p>Ask a scorekeeper to fix this card by erasing the latest entry in each category over the limit.</p>
+</div>
+</div>
+{% endif %}
 {% endmacro %}

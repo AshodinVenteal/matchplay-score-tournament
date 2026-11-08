@@ -116,6 +116,21 @@ def example_standings():
     return sorted(cards, key=Card.computed_score, reverse=True)
 
 
+def example_standings_with_invalid():
+    cards = example_standings()
+    player = cards[-1]
+    invalid = next(
+        card for card in example_history() if card.history_status() == "Invalid"
+    )
+    cards[-1] = replace(
+        invalid,
+        player_name=player.player_name,
+        card_id=player.card_id,
+        games=[replace(game, player_name=player.player_name) for game in invalid.games],
+    )
+    return cards
+
+
 def example_url_for(endpoint, **values):
     routes = {
         "index": "example_cards",
@@ -164,7 +179,7 @@ def register_examples(app):
     @app.route("/examples/player/<path:player_name>")
     def example_player(player_name):
         name = player_name.replace("_", " ")
-        standings = example_standings()
+        standings = example_standings_with_invalid()
         if name == EXAMPLE_PLAYER:
             cards = example_history()
         else:
@@ -173,7 +188,12 @@ def register_examples(app):
             abort(404)
         valid = [card for card in cards if card.is_valid()]
         rank = next(
-            (i for i, card in enumerate(standings, 1) if card.player_name == name), None
+            (
+                i
+                for i, card in enumerate(standings, 1)
+                if card.player_name == name and card.is_valid()
+            ),
+            None,
         )
         return render(
             "player.html",
@@ -188,7 +208,7 @@ def register_examples(app):
     def example_ranking():
         return render(
             "ranking.html",
-            cards=example_standings(),
+            cards=example_standings_with_invalid(),
             active_tab="standings",
             monitor=False,
         )

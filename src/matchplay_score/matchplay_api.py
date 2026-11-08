@@ -26,12 +26,15 @@ _session = requests.Session()
 _session.headers.update({"User-Agent": "ScoreHigh/1.1", "Accept": "application/json"})
 
 
+class ScoreCacheUnavailable(requests.RequestException):
+    """Shared scores could not be read safely."""
+
+
 def _shared() -> RuntimeCache | None:
     global _runtime
     if not os.environ.get("VERCEL"):
         return None
     if _runtime is None:
-
         namespace = "scorehigh-live-v2-" + os.environ.get(
             "VERCEL_PROJECT_ID", "default"
         )
@@ -45,12 +48,16 @@ def _read(key: str) -> dict:
         value = shared.get(key) if shared else None
     except (RuntimeCacheError, OSError, ValueError) as error:
         # A broken shared cache must not fan out into uncoordinated API reads.
-        logger.warning("Score cache unavailable: %s", error)
+        logger.warning("Score cache unavailable: {}", error)
         value = _cache.get(key)
         if value is None:
-            raise requests.RequestException(
+            raise ScoreCacheUnavailable(
                 "Score cache temporarily unavailable"
             ) from error
+        fallback = deepcopy(value)
+        if key.startswith("tournament:"):
+            fallback["cache_unavailable"] = True
+        return fallback
     if value is not None:
         _cache[key] = value
     return deepcopy(value if value is not None else _cache.get(key))
@@ -63,7 +70,7 @@ def _write(key: str, value: dict):
         try:
             shared.set(key, value, {"ttl": STALE_TTL})
         except (RuntimeCacheError, OSError, ValueError) as error:
-            logger.warning("Unable to save shared score cache: %s", error)
+            logger.warning("Unable to save shared score cache: {}", error)
 
 
 def retry_seconds(value):
@@ -104,16 +111,31 @@ def _fetch(url):
         if response is not None and response.status_code == 429:
             delay = max(delay, retry_seconds(response.headers.get("Retry-After")))
         logger.warning(
-            "Match Play request failed: path=%s status=%s error=%s cooldown_seconds=%s",
+            "Match Play request failed: path={} status={} error={} cooldown_seconds={}",
             urlsplit(url).path,
             response.status_code if response is not None else "unavailable",
             type(error).__name__,
             delay,
         )
         _cooldown_until = time() + delay
+        if response is not None and response.status_code == 429:
+            reason = "rate_limited"
+        elif isinstance(error, requests.Timeout):
+            reason = "timeout"
+        elif isinstance(error, ValueError):
+            reason = "invalid_response"
+        elif response is not None:
+            reason = "upstream_error"
+        else:
+            reason = "network_error"
         _write(
             "rate-state",
-            {"cooldown": _cooldown_until, "failures": _failures},
+            {
+                "cooldown": _cooldown_until,
+                "failures": _failures,
+                "reason": reason,
+                "status_code": response.status_code if response is not None else None,
+            },
         )
         raise
 
@@ -131,6 +153,12 @@ def get_tournament_snapshot(tournament_id):
     global _failures
     key = f"tournament:{tournament_id}"
     saved = _read(key)
+    if saved and saved.get("cache_unavailable"):
+        if time() - saved["fetched_at"] < STALE_TTL:
+            return saved
+        raise ScoreCacheUnavailable(
+            "No usable saved scores while the shared cache is unavailable"
+        )
     if saved and time() - saved["fetched_at"] < LIVE_TTL:
         return saved
     usable = saved and time() - saved["fetched_at"] < STALE_TTL
@@ -198,12 +226,44 @@ def get_paginated_data(url: str) -> list[dict]:
     return items
 
 
-def snapshot_status(tournament_id: int) -> tuple[str | None, bool]:
-    saved = _read(f"tournament:{tournament_id}")
-    if not saved:
-        return None, False
-    state = _read("rate-state") or {}
-    stale = (
-        time() < state.get("cooldown", 0) or time() - saved["fetched_at"] >= LIVE_TTL
+def snapshot_details(tournament_id: int):
+    cache_problem = False
+    try:
+        saved = _read(f"tournament:{tournament_id}")
+    except ScoreCacheUnavailable:
+        saved = None
+        cache_problem = True
+    try:
+        state = _read("rate-state") or {}
+    except ScoreCacheUnavailable:
+        state = {}
+        cache_problem = True
+    cooldown = state.get("cooldown", 0)
+    waiting = time() < cooldown
+    updated = (
+        datetime.fromtimestamp(saved["fetched_at"], UTC).isoformat() if saved else None
     )
-    return datetime.fromtimestamp(saved["fetched_at"], UTC).isoformat(), stale
+    if cache_problem or (saved and saved.get("cache_unavailable")):
+        health = "cache_unavailable"
+    elif waiting:
+        health = state.get("reason", "unavailable")
+    elif not saved:
+        health = "waiting"
+    elif time() - saved["fetched_at"] >= LIVE_TTL:
+        health = "cached"
+    else:
+        health = "ready"
+    return {
+        "updated_at": updated,
+        "state": health,
+        "retry_at": datetime.fromtimestamp(cooldown, UTC).isoformat()
+        if waiting
+        else "",
+    }
+
+
+def snapshot_status(tournament_id: int) -> tuple[str | None, bool]:
+    details = snapshot_details(tournament_id)
+    return details["updated_at"], bool(
+        details["updated_at"] and details["state"] != "ready"
+    )

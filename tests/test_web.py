@@ -84,6 +84,25 @@ def test_empty_standings(client):
     assert "No valid cards recorded yet." in response.get_data(as_text=True)
 
 
+def test_invalid_only_player_stays_unranked_at_the_bottom(client, valid):
+    invalid = make_card(
+        "Zero Valid Cards", [(f"Mid {i}", 1000, 1, "mid") for i in range(3)]
+    )
+    invalid.status = "completed"
+    with patch.object(web, "best_cards", return_value=[valid, invalid]):
+        html = client.get("/ranking/281672").text
+    assert html.index('data-player="Elia Lake"') < html.index(
+        'data-player="Zero Valid Cards"'
+    )
+    assert 'class="ranking-entry is-unranked"' in html
+    assert 'aria-label="Unranked">—' in html
+    assert "Invalid card · unranked" in html
+    assert "/player/281672/Zero_Valid_Cards" in html
+    assert 'class="invalid-card-overlay"' in html
+    assert "3 Mid games; the limit is 2." in html
+    assert "Ask a scorekeeper to fix this card" in html
+
+
 def test_newest_card_first_does_not_replace_higher_personal_best(client, valid):
     newer = make_card("Elia Lake", [("Stars", 1000, 1, "old")])
     with (
@@ -145,7 +164,7 @@ def test_tournament_icons_are_distinct_and_repeatable(client, monkeypatch):
     icons = web.tournament_icons()
     assert icons == web.tournament_icons()
     assert len(set(icons.values())) == 3
-    home = client.get("/").get_data(as_text=True)
+    home = client.get("/index").get_data(as_text=True)
     for icon in icons.values():
         assert icon in home
 
@@ -153,7 +172,7 @@ def test_tournament_icons_are_distinct_and_repeatable(client, monkeypatch):
 def test_matchplay_link_available_on_desk_and_inside_tournament(client):
     target = web.tournament_matchplay_urls()[281672]
     for path, link_class in [
-        ("/", "matchplay-button"),
+        ("/index", "matchplay-button"),
         ("/how-it-works/281672", "matchplay-tab"),
     ]:
         html = client.get(path).get_data(as_text=True)

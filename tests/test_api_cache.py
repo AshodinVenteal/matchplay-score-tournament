@@ -39,7 +39,7 @@ def test_cached_readers_do_not_wait_for_an_active_refresh(upstream):
     clock, get, _ = upstream
     api.get_cards(123)
     original_timestamp = api.snapshot_status(123)[0]
-    clock[0] += 16
+    clock[0] += 26
     started = Event()
     release = Event()
     original_get = get.side_effect
@@ -63,7 +63,7 @@ def test_cached_readers_do_not_wait_for_an_active_refresh(upstream):
         assert refresh.result(timeout=5) == [{"cardId": 1}]
 
 
-def test_homepage_makes_no_matchplay_requests(upstream, monkeypatch):
+def test_tournament_index_makes_no_matchplay_requests(upstream, monkeypatch):
     from matchplay_score import web
 
     _, get, _ = upstream
@@ -71,7 +71,7 @@ def test_homepage_makes_no_matchplay_requests(upstream, monkeypatch):
     monkeypatch.setattr(web, "best_cards", forbidden)
     monkeypatch.setattr(web, "get_tournament_data_cached", forbidden)
     with web.app.test_client() as client:
-        response = client.get("/")
+        response = client.get("/index")
     assert response.status_code == 200
     for title in web.TOURNAMENT_INFO.values():
         assert title in response.text
@@ -79,10 +79,10 @@ def test_homepage_makes_no_matchplay_requests(upstream, monkeypatch):
     get.assert_not_called()
 
 
-def test_new_scores_available_after_fifteen_seconds(upstream):
+def test_new_scores_available_after_twenty_five_seconds(upstream):
     clock, get, cards = upstream
     assert api.get_cards(123) == [{"cardId": 1}]
-    clock[0] += 14
+    clock[0] += 24
     api.get_cards(123)
     assert get.call_count == 2
     cards.json.return_value["data"] = [{"cardId": 2}]
@@ -91,11 +91,65 @@ def test_new_scores_available_after_fifteen_seconds(upstream):
     assert get.call_count == 4
 
 
-def test_rate_limit_preserves_cards_and_timestamp(upstream, caplog):
+def test_old_snapshot_alone_is_not_reported_as_a_failure(upstream):
+    clock, get, _ = upstream
+    api.get_cards(123)
+    assert api.snapshot_details(123)["state"] == "ready"
+    clock[0] += 26
+    health = api.snapshot_details(123)
+    assert health["state"] == "cached"
+    assert health["retry_at"] == ""
+    assert get.call_count == 2
+
+
+@pytest.mark.parametrize(
+    "error, reason",
+    [
+        (requests.Timeout(), "timeout"),
+        (requests.ConnectionError(), "network_error"),
+        (ValueError("Invalid JSON"), "invalid_response"),
+    ],
+)
+def test_failed_update_keeps_scores_and_explains_why(upstream, error, reason):
+    clock, get, _ = upstream
+    api.get_cards(123)
+    clock[0] += 26
+    get.side_effect = error
+    assert api.get_cards(123) == [{"cardId": 1}]
+    health = api.snapshot_details(123)
+    assert health["state"] == reason
+    assert health["retry_at"]
+
+
+def test_shared_cache_failure_uses_local_copy_without_refreshing_matchplay(
+    upstream, monkeypatch
+):
+    clock, get, _ = upstream
+    api.get_cards(123)
+    clock[0] += 26
+    broken = Mock()
+    broken.get.side_effect = OSError("Cache connection failed")
+    monkeypatch.setattr(api, "_shared", lambda: broken)
+    assert api.get_cards(123) == [{"cardId": 1}]
+    assert api.snapshot_details(123)["state"] == "cache_unavailable"
+    assert get.call_count == 2
+    assert "cache_unavailable" not in api._cache["tournament:123"]
+
+
+def test_empty_cache_is_waiting_rather_than_cache_failure(upstream):
+    _, get, _ = upstream
+    assert api.snapshot_details(123)["state"] == "waiting"
+    assert api.get_cached_tournament_snapshot(123) is None
+    get.assert_not_called()
+
+
+def test_rate_limit_preserves_cards_and_timestamp(upstream, caplog, request):
+    sink = api.logger.add(caplog.handler, format="{message}")
+    request.addfinalizer(lambda: api.logger.remove(sink))
     clock, get, _ = upstream
     api.get_cards(123)
     original = api.snapshot_status(123)[0]
-    clock[0] += 16
+    clock[0] += 26
     response = Mock(status_code=429, headers={"Retry-After": "120"})
     response.raise_for_status.side_effect = requests.HTTPError("429")
     get.side_effect = lambda *args, **kwargs: response
@@ -105,6 +159,7 @@ def test_rate_limit_preserves_cards_and_timestamp(upstream, caplog):
     assert get.call_count == 3
     assert "status=429" in caplog.text
     assert "cooldown_seconds=120" in caplog.text
+    assert api.snapshot_details(123)["state"] == "rate_limited"
     with pytest.raises(requests.HTTPError, match="cooldown"):
         api.get_cards(999)
     assert get.call_count == 3
@@ -113,7 +168,7 @@ def test_rate_limit_preserves_cards_and_timestamp(upstream, caplog):
 def test_failed_second_card_page_keeps_complete_previous_list(upstream):
     clock, get, _ = upstream
     api.get_cards(123)
-    clock[0] += 16
+    clock[0] += 26
     first = Mock(status_code=200)
     first.json.return_value = {
         "data": [{"cardId": 2}],

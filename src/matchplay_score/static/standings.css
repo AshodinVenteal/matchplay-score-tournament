@@ -58,3 +58,49 @@ html.has-script .ranking-entry .card-details > summary {
 html:not(.has-script) .ranking-entry .breakdown-toggle {
   display: none;
 }
+
+.ranking-entry.is-unranked,
+.ranking-entry.is-unranked:is(.is-me, .is-followed) {
+  background: color-mix(in srgb, var(--paper) 92%, #888);
+  border-color: var(--line);
+}
+.ranking-entry.is-unranked .player-info > a,
+.ranking-entry.is-unranked .rank,
+.ranking-entry.is-unranked .score-info > strong { color: var(--muted); }
+.ranking-entry.is-unranked .player-game-banners { filter: grayscale(1); opacity: .55; }
+.card-invalid-header {
+  padding: 2px 5px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  color: var(--muted);
+  background: var(--paper);
+  font-size: 11px;
+}
+.invalid-card-breakdown { display: grid; isolation: isolate; overflow: hidden; }
+.invalid-card-breakdown > .game-breakdown {
+  grid-area: 1 / 1;
+  filter: blur(2px);
+  opacity: .4;
+  pointer-events: none;
+}
+.invalid-card-overlay {
+  grid-area: 1 / 1;
+  z-index: 1;
+  align-self: center;
+  justify-self: center;
+  width: min(520px, calc(100% - 24px));
+  margin: 16px 0;
+  padding: 18px;
+  border: 1px solid var(--strong-line);
+  border-radius: 5px;
+  background: var(--paper);
+  color: var(--ink);
+  text-align: center;
+  font: 15px/1.5 var(--text-font);
+}
+.invalid-card-overlay > strong { font-size: 18px; }
+.invalid-card-overlay p { margin: 10px 0 0; }
+@media (max-width: 600px) {
+  .invalid-card-overlay { padding: 14px; font-size: 14px; }
+  .invalid-card-overlay > strong { font-size: 16px; }
+}

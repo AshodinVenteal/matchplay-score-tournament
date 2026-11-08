@@ -389,42 +389,111 @@
   let busy = false;
   let lastUpdated = new Date(status.dataset.updatedAt);
   const staticSnapshot = status.dataset.staticSnapshot === 'true';
-  let failed = false;
+  const checkInterval = 25000;
+  let failures = 0;
+  let failure = '';
+  let sourceState = status.dataset.sourceState || 'ready';
+  let sourceRetryAt = Date.parse(status.dataset.retryAt) || 0;
+  let requestRetryAt = 0;
+  let nextCheck = 0;
+  let refreshTimer;
+  const sourceMessages = {
+    rate_limited: 'Match Play rate limit reached.',
+    timeout: 'Match Play timed out.',
+    upstream_error: 'Match Play is unavailable.',
+    network_error: 'Could not reach Match Play.',
+    invalid_response: 'Match Play returned incomplete data.',
+    cache_unavailable: 'Score cache is unavailable.',
+    unavailable: 'Tournament update is unavailable.',
+    waiting: 'Waiting for saved tournament data.',
+  };
+  const savedAge = () => {
+    const seconds = Math.max(0, Math.floor((Date.now() - lastUpdated.getTime()) / 1000));
+    if (!Number.isFinite(seconds)) return '';
+    if (seconds < 60) return `${seconds}s old`;
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m old`;
+    return `${Math.floor(seconds / 3600)}h old`;
+  };
+  const schedule = (delay = checkInterval) => {
+    clearTimeout(refreshTimer);
+    if (!auto) {
+      nextCheck = 0;
+      return;
+    }
+    delay = Math.max(delay, sourceRetryAt - Date.now(), requestRetryAt - Date.now(), 0);
+    nextCheck = Date.now() + delay;
+    refreshTimer = setTimeout(() => refresh(), delay);
+  };
   const updateStatus = () => {
     autoButton.textContent = `Auto: ${auto ? 'on' : 'off'}`;
     autoButton.setAttribute('aria-pressed', String(auto));
-    if (failed || busy) return;
+    refreshButton.disabled = busy || Date.now() < Math.max(sourceRetryAt, requestRetryAt);
+    if (busy) return;
     const time = lastUpdated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    let snapshot = `Snapshot: ${time}`;
     if (staticSnapshot) {
       const date = lastUpdated.toLocaleDateString([], {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
       });
-      status.textContent = `Snapshot: ${date}, ${time} · ${auto ? 'checks every 25s.' : 'checks paused.'}`;
-    } else {
-      status.textContent = `Snapshot: ${time} · ${auto ? 'checks every 25s.' : 'checks paused.'}`;
+      snapshot = `Snapshot: ${date}, ${time}`;
     }
-    if (status.dataset.cached === 'true') status.textContent += ' Cached scores; retrying.';
+    const reason = !navigator.onLine ? 'You are offline.' : failure || sourceMessages[sourceState] || '';
+    if (reason || sourceState === 'cached') {
+      const detail = reason || 'Showing saved scores.';
+      const wait = Math.max(0, Math.ceil((Math.max(sourceRetryAt, requestRetryAt) - Date.now()) / 1000));
+      const retry = auto
+        ? `Next check in ${Math.max(0, Math.ceil((nextCheck - Date.now()) / 1000))}s.`
+        : `Automatic checks paused. ${wait ? `Refresh available in ${wait}s.` : 'Use Refresh to check.'}`;
+      status.textContent = `${snapshot} · ${savedAge()} · ${detail} ${retry}`;
+    } else {
+      status.textContent = `${snapshot} · ${auto ? 'checks every 25s.' : 'checks paused.'}`;
+    }
+    if (reason) status.dataset.error = 'true';
+    else delete status.dataset.error;
   };
   const refresh = async (manual = false) => {
-    if (busy || (!manual && (!auto || document.hidden))) return;
+    if (busy) return;
+    if ((!manual && (!auto || document.hidden)) || !navigator.onLine ||
+        Date.now() < Math.max(sourceRetryAt, requestRetryAt)) {
+      schedule();
+      updateStatus();
+      return;
+    }
     // Avoid replacing a card while someone is using its links or disclosure
     const current = one('[data-score-content]');
-    if (!manual && current.contains(document.activeElement)) return;
+    if (!manual && current.contains(document.activeElement)) {
+      schedule();
+      updateStatus();
+      return;
+    }
     busy = true;
     refreshButton.disabled = true;
-    status.textContent = staticSnapshot ? 'Checking published scores…' : 'Fetching scores…';
+    status.textContent = 'Checking for updated scores…';
     try {
       const response = await fetch(location.href, {
         headers: { 'X-Requested-With': 'ScoreHigh' },
+        cache: 'no-cache',
         signal: AbortSignal.timeout(25000),
       });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.ok) {
+        const retry = response.headers.get('Retry-After');
+        if (retry) {
+          const seconds = Number(retry);
+          requestRetryAt = Number.isFinite(seconds)
+            ? Date.now() + Math.max(0, seconds) * 1000 : Date.parse(retry) || 0;
+        }
+        const error = new Error(`HTTP ${response.status}`);
+        error.status = response.status;
+        error.reason = response.headers.get('X-ScoreHigh-Error');
+        throw error;
+      }
       const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
       const incoming = one('[data-score-content]', doc);
       const timestamp = one('[data-refresh-status]', doc);
-      if (!incoming || !timestamp) throw new Error('Incomplete scoreboard');
+      if (!incoming || !timestamp || !Number.isFinite(Date.parse(timestamp.dataset.updatedAt)))
+        throw new Error('Incomplete scoreboard');
       const expanded = new Map(
         all('[data-card-key]', current).map((entry) => [
           entry.dataset.cardKey,
@@ -448,16 +517,23 @@
       window.scrollTo({ top: scrollY, behavior: 'instant' });
       lastUpdated = new Date(timestamp.dataset.updatedAt);
       status.dataset.cached = timestamp.dataset.cached || 'false';
-      failed = false;
-      delete status.dataset.error;
-    } catch {
-      failed = true;
-      status.dataset.error = 'true';
-      status.textContent =
-        'Update failed. Previously fetched scores are still shown. Use Refresh to try again.';
+      sourceState = timestamp.dataset.sourceState || (timestamp.dataset.cached === 'true' ? 'cached' : 'ready');
+      sourceRetryAt = Date.parse(timestamp.dataset.retryAt) || 0;
+      failures = 0;
+      failure = '';
+      requestRetryAt = 0;
+    } catch (error) {
+      failures += 1;
+      if (sourceMessages[error.reason]) failure = sourceMessages[error.reason];
+      else if (error.status === 429) failure = 'Site request limit reached.';
+      else if (error.status) failure = `Site update failed (HTTP ${error.status}).`;
+      else if (error.name === 'TimeoutError' || error.name === 'AbortError') failure = 'Update request timed out.';
+      else if (error.message === 'Incomplete scoreboard') failure = 'The update was incomplete; previous scores are still shown.';
+      else failure = 'Could not reach the scoring site.';
+      console.warn('ScoreHigh update failed', { path: location.pathname, error: error.name, status: error.status });
     } finally {
       busy = false;
-      refreshButton.disabled = false;
+      schedule(Math.min(120000, checkInterval * 2 ** Math.min(3, Math.max(0, failures - 1))));
       updateStatus();
     }
   };
@@ -466,11 +542,19 @@
   autoButton.addEventListener('click', () => {
     auto = !auto;
     saveSetting('scorehigh-auto', auto ? 'on' : 'off');
+    schedule();
     updateStatus();
   });
-  setInterval(() => refresh(), 10000);
+  schedule();
+  // Update the displayed age/countdown without making another network request.
+  setInterval(updateStatus, 1000);
+  addEventListener('offline', updateStatus);
+  addEventListener('online', () => {
+    if (auto) schedule(0);
+    updateStatus();
+  });
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && Date.now() - lastUpdated.getTime() >= 10000) refresh();
+    if (!document.hidden && auto && Date.now() >= nextCheck) refresh();
   });
   updateStatus();
 })();

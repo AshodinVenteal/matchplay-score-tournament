@@ -2,6 +2,8 @@
 {% from "card.html" import breakdown %}
 {% from "components.html" import game_banner, game_banners, progress_header with context %}
 {% block content %}
+{% set ranked_count = namespace(value=0) %}
+{% for card in cards %}{% if card.is_valid() %}{% set ranked_count.value = ranked_count.value + 1 %}{% endif %}{% endfor %}
 <div class="monitor-tools" data-monitor-tools hidden><a class="framed-button"
         href="{{ url_for('render_ranking', tournament_id=tournament_id) }}">Exit display</a><button
         class="framed-button" type="button" data-fullscreen>Fullscreen</button><button class="framed-button"
@@ -102,25 +104,26 @@
 
             <div class="ranking-list">
                 {% for card in cards %}
-                <article class="ranking-entry"
+                {% set ranked = card.is_valid() %}
+                <article class="ranking-entry{% if not ranked %} is-unranked{% endif %}"
                     data-card-progress="{{ 'in-progress' if card.games|length < card_game_limit else 'complete' }}"
                     data-player="{{ card.player_name }}" data-tracked-player="{{ card.player_name }}"
                     data-tournament="{{ tournament_id }}" data-card-key="{{ card.player_name }}">
-                    <div class="ranking-row"><span class="rank {% if loop.index == 1 %}rank-first{% endif %}"
-                            aria-label="Rank {{ loop.index }}">{{ loop.index }}</span>
+                    <div class="ranking-row"><span class="rank {% if ranked and loop.index == 1 %}rank-first{% endif %}"
+                            aria-label="{{ 'Rank ' ~ loop.index if ranked else 'Unranked' }}">{{ loop.index if ranked else '—' }}</span>
                         <div class="player-info"><a
                                 href="{{ url_for('render_player', tournament_id=tournament_id, player_name=card.player_name.replace(' ', '_')) }}">{{
-                                card.player_name }}</a>{{ progress_header(card) }}<button class="breakdown-toggle"
+                                card.player_name }}</a>{% if ranked %}{{ progress_header(card) }}{% else %}<span class="card-invalid-header card-progress-header">{{ 'Voided card' if card.voided else 'Invalid card' }} · unranked</span>{% endif %}<button class="breakdown-toggle"
                                 type="button" data-card-toggle aria-expanded="false"
                                 aria-controls="breakdown-{{ card|card_key }}"
                                 aria-label="Game breakdown for {{ card.player_name }}"><span
                                     class="breakdown-text">Breakdown</span> <span class="chevron"
                                     aria-hidden="true">&#8964;</span></button><span class="player-card-meta">{% if
                                 card.games|length < card_game_limit %}{{ card.games|length }}/{{ card_game_limit }}
-                                    games{% else %}{{ card.games|length }} games{% endif %}{% if loop.index==1 %}<span
+                                    games{% else %}{{ card.games|length }} games{% endif %}{% if ranked and loop.index==1 %}<span
                                     class="leader-label">LEADER</span>{% endif %}</span></div>
 
-                        <div class="score-info"><strong>{{ card.computed_score()|commafy }}</strong></div>
+                        <div class="score-info"><strong>{{ card.computed_score()|commafy if ranked else '—' }}</strong></div>
                         <span class="machine-chips player-game-banners">{{ game_banners(card, compact=True) }}</span>
                     </div>
 
@@ -146,13 +149,12 @@
                 <p>Try another name or turn off “Following only” to see everyone.</p>
             </div>
 
-            <div class="scoreboard-footer"><span>Highest valid card per player</span><span>{{ cards|length }}
+            <div class="scoreboard-footer"><span>Highest valid card per player</span><span>{{ ranked_count.value }}
                     ranked</span></div>
 
         </div>
 
-        <p class="update-status" data-refresh-status role="status" data-cached="{{ 'true' if cached_scores else 'false' }}" data-updated-at="{{ updated_at }}" {% if
-            static_snapshot %}data-static-snapshot="true" {% endif %}>Snapshot: {{ updated_at }} · checks every 10s.</p>
+        {% include "refresh_status.html" %}
     </section>
 
     <aside class="sidebar" aria-label="Tournament reference">

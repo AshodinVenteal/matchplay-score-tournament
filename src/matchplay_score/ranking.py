@@ -9,7 +9,9 @@ from .tournament import (
 )
 
 
-def best_cards(tournament_id: int, use_cache: bool = True) -> list[Card]:
+def best_cards(
+    tournament_id: int, use_cache: bool = True, *, include_invalid: bool = False
+) -> list[Card]:
     if use_cache:
         tournament_data = get_tournament_data_cached(tournament_id)
     else:
@@ -19,19 +21,35 @@ def best_cards(tournament_id: int, use_cache: bool = True) -> list[Card]:
     tournament = parse_tournament(tournament_data)
 
     cards_by_player: dict[str, Card] = {}
+    excluded_by_player: dict[str, Card] = {}
     for card_item in card_data:
         card: Card = parse_card(card_item, tournament)
+        if (
+            use_cache
+            and card.player_name == UNKNOWN
+            and (card.is_valid() or include_invalid)
+        ):
+            return best_cards(
+                tournament_id, use_cache=False, include_invalid=include_invalid
+            )
         if card.is_valid():
-            if use_cache and card.player_name == UNKNOWN:
-                return best_cards(tournament_id, use_cache=False)
-
             if card.player_name not in cards_by_player or (
                 cards_by_player[card.player_name].computed_score()
                 < card.computed_score()
             ):
                 cards_by_player[card.player_name] = card
+        elif include_invalid:
+            previous = excluded_by_player.get(card.player_name)
+            if previous is None or creation_order(
+                card.created_at, card.card_id
+            ) > creation_order(previous.created_at, previous.card_id):
+                excluded_by_player[card.player_name] = card
 
-    return sorted(cards_by_player.values(), key=Card.computed_score, reverse=True)
+    ranked = sorted(cards_by_player.values(), key=Card.computed_score, reverse=True)
+    unranked = [
+        card for name, card in excluded_by_player.items() if name not in cards_by_player
+    ]
+    return ranked + sorted(unranked, key=lambda card: card.player_name.casefold())
 
 
 def player_cards(

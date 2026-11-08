@@ -69,18 +69,18 @@
       // Apply updates between cards so live score entry cannot interrupt a fade.
       pendingDeck = next;
       status.textContent = html.querySelector('[data-snapshot-stale]')?.dataset.snapshotStale === 'true'
-        ? 'Cached scores' : 'Checks every 15s';
+        ? 'Cached scores' : 'Checks every 25s';
     } catch {
       // Keep the previous cards on screen through an outage or rate-limit cooldown.
       status.textContent = 'Cached scores · retrying';
     } finally {
       refreshing = false;
-      setTimeout(refresh, 15000);
+      setTimeout(refresh, 25000);
     }
   }
 
   formatTimes(deck);
   showCard();
   setInterval(advance, interval);
-  setTimeout(refresh, 15000);
+  setTimeout(refresh, 25000);
 })();
