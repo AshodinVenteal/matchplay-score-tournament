@@ -70,13 +70,13 @@ def main():
             with page.expect_response(
                 lambda response: "/overlay/282630" in response.url
             ):
-                page.clock.run_for(15000)
+                page.clock.run_for(25000)
             page.clock.run_for(8400)
             expect(page.locator(".broadcast-card:visible")).to_have_count(1)
             # An outage preserves cards; the next successful refresh recovers.
             with patch.object(web, "tournament_cards", side_effect=requests.Timeout):
                 with page.expect_response(lambda response: response.status == 503):
-                    page.clock.run_for(16000)
+                    page.clock.run_for(26000)
                 expect(page.locator("[data-broadcast-status]")).to_have_text(
                     "Cached scores · retrying"
                 )
@@ -84,9 +84,9 @@ def main():
             with page.expect_response(
                 lambda response: "/overlay/282630" in response.url
             ):
-                page.clock.run_for(16000)
+                page.clock.run_for(26000)
             expect(page.locator("[data-broadcast-status]")).to_have_text(
-                "Checks every 15s"
+                "Checks every 25s"
             )
             page.goto(base + "/examples/obs/")
             page.locator('select[name="mode"]').select_option("top")

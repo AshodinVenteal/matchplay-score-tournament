@@ -145,7 +145,7 @@ def test_tournament_icons_are_distinct_and_repeatable(client, monkeypatch):
     icons = web.tournament_icons()
     assert icons == web.tournament_icons()
     assert len(set(icons.values())) == 3
-    home = client.get("/").get_data(as_text=True)
+    home = client.get("/index").get_data(as_text=True)
     for icon in icons.values():
         assert icon in home
 
@@ -153,7 +153,7 @@ def test_tournament_icons_are_distinct_and_repeatable(client, monkeypatch):
 def test_matchplay_link_available_on_desk_and_inside_tournament(client):
     target = web.tournament_matchplay_urls()[281672]
     for path, link_class in [
-        ("/", "matchplay-button"),
+        ("/index", "matchplay-button"),
         ("/how-it-works/281672", "matchplay-tab"),
     ]:
         html = client.get(path).get_data(as_text=True)

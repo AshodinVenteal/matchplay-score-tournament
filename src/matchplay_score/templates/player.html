@@ -18,6 +18,6 @@ A scorekeeper will make this card valid by erasing the latest entry in each cate
 <details class="card-details" {% if example_mode|default(false) or card.is_latest or card == best_card or not card.is_valid() %}open{% endif %}><summary><span>Machine scores &amp; multipliers</span><span class="chevron" aria-hidden="true">⌄</span></summary>{{ breakdown(card, show_added=True) }}</details></article>
 {% endfor %}
 </div>
-<p class="update-status" data-refresh-status role="status" data-cached="{{ 'true' if cached_scores else 'false' }}" data-updated-at="{{ updated_at }}" {% if static_snapshot %}data-static-snapshot="true"{% endif %}>Snapshot: {{ updated_at }} · checks every 10s.</p>
+{% include "refresh_status.html" %}
 {% include "rules.html" %}
 {% endblock %}

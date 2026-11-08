@@ -151,8 +151,7 @@
 
         </div>
 
-        <p class="update-status" data-refresh-status role="status" data-cached="{{ 'true' if cached_scores else 'false' }}" data-updated-at="{{ updated_at }}" {% if
-            static_snapshot %}data-static-snapshot="true" {% endif %}>Snapshot: {{ updated_at }} · checks every 10s.</p>
+        {% include "refresh_status.html" %}
     </section>
 
     <aside class="sidebar" aria-label="Tournament reference">

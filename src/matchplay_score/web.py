@@ -2,6 +2,7 @@ from dataclasses import replace
 from datetime import UTC, datetime
 from hashlib import sha256
 from importlib.metadata import version
+from math import ceil
 from random import Random
 
 import requests
@@ -11,7 +12,11 @@ from .branding import REPOSITORY_DESCRIPTION, SITE_DESCRIPTION, SITE_TITLE
 from .broadcast import overlay_entries, overlay_options, tournament_cards
 from .examples import register_examples
 from .flyers import FLYER_IMAGES
-from .matchplay_api import get_tournament_data_cached, snapshot_status
+from .matchplay_api import (
+    ScoreCacheUnavailable,
+    get_tournament_data_cached,
+    snapshot_details,
+)
 from .ranking import best_cards, player_cards
 from .tournament import (
     ARENAS,
@@ -24,7 +29,7 @@ from .tournament import (
 
 app = Flask(__name__)
 register_examples(app)
-APP_VERSION = version("matchplay-score") + "-obs-cards-6"
+APP_VERSION = version("matchplay-score") + "-refresh-status-1"
 TOURNAMENT_INFO = {
     281672: "Test Tournament",
     282316: "Score High for Trans Lives",
@@ -82,14 +87,20 @@ def site_context():
         "matchplay_urls": tournament_matchplay_urls(),
         "static_snapshot": bool(app.config.get("SNAPSHOT_AT")),
         "cached_scores": getattr(g, "cached_scores", False),
+        "score_health": getattr(g, "score_health", {}),
         "flyer_images": FLYER_IMAGES,
     }
 
 
 def score_timestamp(tournament_id):
-    updated, stale = snapshot_status(tournament_id)
-    g.cached_scores = stale
-    return updated or app.config.get("SNAPSHOT_AT") or datetime.now(UTC).isoformat()
+    health = snapshot_details(tournament_id)
+    g.score_health = health
+    g.cached_scores = bool(health["updated_at"] and health["state"] != "ready")
+    return (
+        health["updated_at"]
+        or app.config.get("SNAPSHOT_AT")
+        or datetime.now(UTC).isoformat()
+    )
 
 
 @app.before_request
@@ -291,6 +302,18 @@ def upstream_error(error):
         type(error).__name__,
         exc_info=(type(error), error, error.__traceback__),
     )
+    health = snapshot_details((request.view_args or {}).get("tournament_id", 0))
+    reason = (
+        "cache_unavailable"
+        if isinstance(error, ScoreCacheUnavailable)
+        else "upstream_error"
+    )
+    if health["state"] not in {"ready", "cached", "waiting"}:
+        reason = health["state"]
+    headers = {"X-ScoreHigh-Error": reason}
+    if health["retry_at"]:
+        retry = datetime.fromisoformat(health["retry_at"]) - datetime.now(UTC)
+        headers["Retry-After"] = str(max(1, ceil(retry.total_seconds())))
     return (
         render_template(
             "error.html",
@@ -298,6 +321,7 @@ def upstream_error(error):
             message="We couldn't reach Match Play. Please try again in a moment.",
         ),
         503,
+        headers,
     )
 
 

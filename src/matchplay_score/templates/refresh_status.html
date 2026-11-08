@@ -1,0 +1,8 @@
+<p class="update-status" data-refresh-status role="status"
+   data-cached="{{ 'true' if cached_scores else 'false' }}"
+   data-source-state="{{ score_health.get('state', 'ready') }}"
+   data-retry-at="{{ score_health.get('retry_at', '') }}"
+   data-updated-at="{{ updated_at }}"
+   {% if static_snapshot %}data-static-snapshot="true"{% endif %}>
+  Snapshot: {{ updated_at }} · checks every 25s.
+</p>
