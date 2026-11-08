@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
+from threading import Event
 from unittest.mock import Mock
 
 import pytest
@@ -12,9 +13,6 @@ from matchplay_score import matchplay_api as api
 def upstream(monkeypatch):
     clock = [1000.0]
     monkeypatch.setattr(api, "time", lambda: clock[0])
-    monkeypatch.setattr(
-        api, "sleep", lambda seconds: clock.__setitem__(0, clock[0] + seconds)
-    )
     roster = Mock(status_code=200)
     roster.json.return_value = {"data": {"players": [], "arenas": []}}
     cards = Mock(status_code=200)
@@ -35,6 +33,50 @@ def test_viewers_share_one_roster_and_card_fetch(upstream):
     assert results[1][0]["cardId"] == 1
     assert api.get_tournament_data(123) == {"players": [], "arenas": []}
     assert get.call_count == 2
+
+
+def test_cached_readers_do_not_wait_for_an_active_refresh(upstream):
+    clock, get, _ = upstream
+    api.get_cards(123)
+    original_timestamp = api.snapshot_status(123)[0]
+    clock[0] += 16
+    started = Event()
+    release = Event()
+    original_get = get.side_effect
+
+    def slow_refresh(url, **kwargs):
+        started.set()
+        assert release.wait(timeout=5)
+        return original_get(url, **kwargs)
+
+    get.side_effect = slow_refresh
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        refresh = pool.submit(api.get_cards, 123)
+        try:
+            assert started.wait(timeout=5)
+            cached = pool.submit(api.get_cards, 123)
+            assert cached.result(timeout=1) == [{"cardId": 1}]
+            assert not refresh.done()
+            assert api.snapshot_status(123)[0] == original_timestamp
+        finally:
+            release.set()
+        assert refresh.result(timeout=5) == [{"cardId": 1}]
+
+
+def test_homepage_makes_no_matchplay_requests(upstream, monkeypatch):
+    from matchplay_score import web
+
+    _, get, _ = upstream
+    forbidden = Mock(side_effect=AssertionError("Homepage must use configuration only"))
+    monkeypatch.setattr(web, "best_cards", forbidden)
+    monkeypatch.setattr(web, "get_tournament_data_cached", forbidden)
+    with web.app.test_client() as client:
+        response = client.get("/")
+    assert response.status_code == 200
+    for title in web.TOURNAMENT_INFO.values():
+        assert title in response.text
+    forbidden.assert_not_called()
+    get.assert_not_called()
 
 
 def test_new_scores_available_after_fifteen_seconds(upstream):

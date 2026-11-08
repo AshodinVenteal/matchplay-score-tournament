@@ -7,7 +7,7 @@ from copy import deepcopy
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 from threading import RLock
-from time import sleep, time
+from time import time
 from urllib.parse import urlsplit
 
 import requests
@@ -20,7 +20,6 @@ LIVE_TTL = 15
 STALE_TTL = 3600
 _cache = {}
 _lock = RLock()
-_next_request = 0.0
 _cooldown_until = 0.0
 _failures = 0
 _runtime = None
@@ -84,7 +83,7 @@ def retry_seconds(value):
 
 
 def _fetch(url):
-    global _next_request, _cooldown_until, _failures
+    global _cooldown_until, _failures
     if (
         urlsplit(url).scheme != "https"
         or urlsplit(url).netloc != "api.matchplay.events"
@@ -94,17 +93,10 @@ def _fetch(url):
     _cooldown_until = max(_cooldown_until, state.get("cooldown", 0))
     if time() < _cooldown_until:
         raise requests.HTTPError("Match Play rate-limit cooldown is active")
-    delay = max(_next_request, state.get("next", 0)) - time()
-    if delay > 0:
-        sleep(delay)
-    _next_request = time() + 1
-    _write(
-        "rate-state",
-        {"next": _next_request, "cooldown": _cooldown_until, "failures": _failures},
-    )
     response = None
     try:
-        # No automatic retries that bypass our request pacing.
+        # Cache refreshes fetch the roster and cards without artificial delays.
+        # Actual rate-limit responses establish a cooldown for later refreshes.
         response = _session.get(url, timeout=(5, 15))
         response.raise_for_status()
         return response.json()
@@ -116,7 +108,7 @@ def _fetch(url):
         _cooldown_until = time() + delay
         _write(
             "rate-state",
-            {"next": _next_request, "cooldown": _cooldown_until, "failures": _failures},
+            {"cooldown": _cooldown_until, "failures": _failures},
         )
         raise
 
@@ -125,7 +117,20 @@ def get_tournament_snapshot(tournament_id):
     """Share one roster and complete card list between every page for this event."""
     global _failures
     key = f"tournament:{tournament_id}"
-    with _lock:
+    saved = _read(key)
+    if saved and time() - saved["fetched_at"] < LIVE_TTL:
+        return saved
+    usable = saved and time() - saved["fetched_at"] < STALE_TTL
+    if usable:
+        # Another refresh must not make viewers wait for cached scores.
+        if not _lock.acquire(blocking=False):
+            saved["stale"] = True
+            return saved
+    else:
+        # With no usable scores yet, share the initial network fetch.
+        _lock.acquire()
+    try:
+        # A refresh may have completed since the first cache lookup.
         saved = _read(key)
         if saved and time() - saved["fetched_at"] < LIVE_TTL:
             return saved
@@ -150,6 +155,8 @@ def get_tournament_snapshot(tournament_id):
         _write(key, saved)
         _failures = 0
         return deepcopy(saved)
+    finally:
+        _lock.release()
 
 
 def get_tournament_data_cached(tournament_id):
