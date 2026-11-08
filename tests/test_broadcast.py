@@ -4,7 +4,7 @@ from unittest.mock import patch
 import requests
 
 from matchplay_score import broadcast, web
-from matchplay_score.examples import example_history
+from matchplay_score.examples import example_history, example_standings
 from matchplay_score.tournament import Card, SinglePlayerGame
 
 
@@ -30,6 +30,16 @@ def test_recent_order_uses_latest_game_submission_not_card_creation_or_total():
     assert [card.card_id for card, rank in selected] == [2, 4]
     assert selected[1][0] is progress
     assert all(rank == 1 for card, rank in selected)
+
+
+def test_cycle_queues_recent_cards_then_top_three():
+    entries = broadcast.overlay_entries(example_standings(), "cycle", 5)
+    assert [section for card, rank, section in entries] == ["recent"] * 5 + ["top"] * 3
+    assert [rank for card, rank, section in entries if section == "top"] == [1, 2, 3]
+    client = web.app.test_client()
+    recent = client.get("/examples/overlay/?mode=recent").text
+    assert 'class="broadcast-rank"' not in recent
+    assert 'class="broadcast-rank">#1' in client.get("/examples/overlay/?mode=top").text
 
 
 def test_overlay_reads_one_complete_shared_snapshot():
@@ -90,7 +100,7 @@ def test_overlay_options_are_bounded_and_names_escaped():
     assert "<script>bad()</script>" not in html
     with web.app.test_request_context("/?mode=other&seconds=-1&count=999"):
         assert broadcast.overlay_options() == {
-            "mode": "recent",
+            "mode": "cycle",
             "count": 10,
             "seconds": 8,
         }

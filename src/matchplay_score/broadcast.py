@@ -7,10 +7,10 @@ from .tournament import Card, creation_order, parse_card, parse_tournament
 
 
 def overlay_options():
-    mode = request.args.get("mode", "recent")
-    if mode not in {"recent", "top"}:
-        mode = "recent"
-    count = request.args.get("count", 5 if mode == "recent" else 3, type=int)
+    mode = request.args.get("mode", "cycle")
+    if mode not in {"cycle", "recent", "top"}:
+        mode = "cycle"
+    count = request.args.get("count", 3 if mode == "top" else 5, type=int)
     seconds = request.args.get("seconds", 12, type=int)
     return {
         "mode": mode,
@@ -42,6 +42,19 @@ def select_cards(cards, mode, count):
         else sorted(eligible, key=last_submission, reverse=True)
     )
     return [(card, ranks[card.player_name]) for card in selected[:count]]
+
+
+def overlay_entries(cards, mode, count):
+    sections = (
+        [("recent", count), ("top", min(3, count))]
+        if mode == "cycle"
+        else [(mode, count)]
+    )
+    return [
+        (card, rank, section)
+        for section, limit in sections
+        for card, rank in select_cards(cards, section, limit)
+    ]
 
 
 def tournament_cards(tournament_id):

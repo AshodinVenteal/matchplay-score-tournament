@@ -22,6 +22,7 @@ body {
 .broadcast-rank { color: #a8def0; font-size: 26px; font-weight: bold; }
 .broadcast-player h2 { font-size: 30px; line-height: 1.1; margin: 0; overflow-wrap: anywhere; }
 .broadcast-player p { margin: 9px 0 12px; color: #c4bfce; font-size: 15px; }
+.broadcast-section-label { color: #a8def0; font-weight: 700; }
 .broadcast-submitted { display: block; margin-top: 5px; font-size: 13px; }
 .broadcast-total, .broadcast-calculation strong, .broadcast-points {
   font-family: var(--score-font); font-variant-numeric: tabular-nums; white-space: nowrap;

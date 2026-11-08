@@ -13,12 +13,12 @@
   <main class="broadcast-panel" aria-label="Tournament card overlay">
     <section class="broadcast-stage" aria-label="Rotating cards">
       <div data-card-deck>
-        {% for card, rank in entries %}
+        {% for card, rank, section in entries %}
         {% set last = card.last_added_game() %}
-        <article class="broadcast-card" data-card-id="{{ card.card_id or card.player_name }}" {% if not loop.first %}hidden{% endif %}>
+        <article class="broadcast-card" data-card-id="{{ section }}-{{ card.card_id or card.player_name }}" data-card-section="{{ section }}" {% if not loop.first %}hidden{% endif %}>
           <header class="broadcast-player">
-            <div class="broadcast-player-heading">{% if options.mode == 'top' %}<span class="broadcast-rank">#{{ rank }}</span>{% endif %}<h2>{{ card.player_name }}</h2></div>
-            <p>{{ card.history_status() }} · {{ card.games|length }}/{{ card_game_limit }} games
+            <div class="broadcast-player-heading">{% if section == 'top' %}<span class="broadcast-rank">#{{ rank }}</span>{% endif %}<h2>{{ card.player_name }}</h2></div>
+            <p>{% if options.mode == 'cycle' %}<span class="broadcast-section-label">{{ 'Top card' if section == 'top' else 'Recent card' }}</span> · {% endif %}{{ card.history_status() }} · {{ card.games|length }}/{{ card_game_limit }} games
               {% if last and last.created_at %}<span class="broadcast-submitted">Last score <time datetime="{{ last.created_at }}">{{ last.created_at|added_time }}</time></span>{% endif %}
             </p>
             <strong class="broadcast-total">{{ card.computed_score()|commafy }}</strong><span class="broadcast-total-label">Adjusted card total</span>
@@ -26,9 +26,9 @@
           <div class="broadcast-columns"><span>Machine / score × multiplier</span><span>Points</span></div>
           <div class="broadcast-games">
             {% for game in card.games %}
-            <div class="broadcast-game broadcast-era-{{ game.era }}{% if options.mode == 'recent' and game is sameas last %} broadcast-last-game{% endif %}">
+            <div class="broadcast-game broadcast-era-{{ game.era }}{% if section == 'recent' and game is sameas last %} broadcast-last-game{% endif %}">
               <div class="broadcast-machine"><strong>{{ game.game_name }}</strong><span class="broadcast-era">{{ game.era|capitalize }}</span></div>
-              {% if options.mode == 'recent' and game is sameas last %}<span class="broadcast-last-label">Last added</span>{% endif %}
+              {% if section == 'recent' and game is sameas last %}<span class="broadcast-last-label">Last added</span>{% endif %}
               <span class="broadcast-calculation"><strong>{{ game.score|commafy }}</strong> <span>× {{ game.multiplier }}</span></span>
               <strong class="broadcast-points">{{ game.computed_score()|commafy }}</strong>
             </div>

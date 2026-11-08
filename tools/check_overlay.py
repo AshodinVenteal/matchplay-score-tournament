@@ -36,7 +36,7 @@ def main():
             expect(page.locator(".broadcast-header, .broadcast-footer")).to_have_count(0)
             assert (
                 page.locator(".broadcast-card:visible").get_attribute("data-card-id")
-                == "4"
+                == "recent-4"
             )
             assert (
                 page.locator("body").evaluate(
@@ -64,7 +64,7 @@ def main():
             page.screenshot(path=".preview/obs-overlay.png")
             page.clock.run_for(8400)
             expect(page.locator(".broadcast-card:visible")).to_have_attribute(
-                "data-card-id", "2"
+                "data-card-id", "recent-2"
             )
             # The source refreshes its own page, never Match Play from the browser.
             with page.expect_response(
@@ -100,6 +100,18 @@ def main():
             ).to_have_count(3)
             page.set_viewport_size({"width": 390, "height": 844})
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+            page.goto(base + "/overlay/282630?mode=cycle&seconds=8")
+            current = page.locator(".broadcast-card:visible")
+            expect(current).to_have_attribute("data-card-id", "recent-4")
+            expect(current.locator(".broadcast-rank")).to_have_count(0)
+            page.clock.run_for(8400)
+            expect(current).to_have_attribute("data-card-id", "recent-2")
+            page.clock.run_for(8000)
+            expect(current).to_have_attribute("data-card-id", "top-2")
+            expect(current.locator(".broadcast-rank")).to_have_text("#1")
+            page.clock.run_for(8000)
+            expect(current).to_have_attribute("data-card-id", "recent-4")
+            expect(current.locator(".broadcast-rank")).to_have_count(0)
             assert not errors, errors
             browser.close()
     finally:

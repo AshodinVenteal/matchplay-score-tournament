@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 from flask import abort, g, render_template, request, url_for
 
-from .broadcast import overlay_options, select_cards
+from .broadcast import overlay_entries, overlay_options
 from .tournament import ARENAS, Card, SinglePlayerGame, creation_order
 
 EXAMPLE_ID = 25025
@@ -225,7 +225,7 @@ def register_examples(app):
         return render(
             "overlay.html",
             title="25-player demo",
-            entries=select_cards(cards, options["mode"], options["count"]),
+            entries=overlay_entries(cards, options["mode"], options["count"]),
             options=options,
         )
 

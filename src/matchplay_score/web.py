@@ -8,7 +8,7 @@ import requests
 from flask import Flask, abort, g, render_template, request
 
 from .branding import REPOSITORY_DESCRIPTION, SITE_DESCRIPTION, SITE_TITLE
-from .broadcast import overlay_options, select_cards, tournament_cards
+from .broadcast import overlay_entries, overlay_options, tournament_cards
 from .examples import register_examples
 from .flyers import FLYER_IMAGES
 from .matchplay_api import get_tournament_data_cached, snapshot_status
@@ -24,7 +24,7 @@ from .tournament import (
 
 app = Flask(__name__)
 register_examples(app)
-APP_VERSION = version("matchplay-score") + "-obs-cards-3"
+APP_VERSION = version("matchplay-score") + "-obs-cards-4"
 TOURNAMENT_INFO = {
     281672: "Test Tournament",
     282316: "Score High for Trans Lives",
@@ -177,7 +177,7 @@ def render_overlay(tournament_id: int):
     return render_template(
         "overlay.html",
         title=tournament_title(tournament_id),
-        entries=select_cards(cards, options["mode"], options["count"]),
+        entries=overlay_entries(cards, options["mode"], options["count"]),
         options=options,
         updated_at=score_timestamp(tournament_id),
     )
