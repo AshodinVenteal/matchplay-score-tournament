@@ -5,10 +5,11 @@ from importlib.metadata import version
 from random import Random
 
 import requests
-from flask import Flask, abort, render_template
+from flask import Flask, abort, g, render_template, request
 
 from .branding import REPOSITORY_DESCRIPTION, SITE_DESCRIPTION, SITE_TITLE
-from .matchplay_api import get_tournament_data_cached
+from .examples import register_examples
+from .matchplay_api import get_tournament_data_cached, snapshot_status
 from .ranking import best_cards, player_cards
 from .tournament import (
     ARENAS,
@@ -20,7 +21,8 @@ from .tournament import (
 )
 
 app = Flask(__name__)
-APP_VERSION = version("matchplay-score")
+register_examples(app)
+APP_VERSION = version("matchplay-score") + "-voided-cards-1"
 TOURNAMENT_INFO = {
     281672: "Test Tournament",
     282316: "Score High for Trans Lives",
@@ -59,7 +61,8 @@ def tournament_icons():
         icons[tournament_id] = next(
             (icon for icon in choices if icon not in icons.values()), choices[0]
         )
-    icons[282316] = "🏆"
+    if 282316 in TOURNAMENT_INFO:
+        icons[282316] = "🏆"
     return icons
 
 
@@ -76,11 +79,34 @@ def site_context():
         "tournament_icons": tournament_icons(),
         "matchplay_urls": tournament_matchplay_urls(),
         "static_snapshot": bool(app.config.get("SNAPSHOT_AT")),
+        "cached_scores": getattr(g, "cached_scores", False),
     }
 
 
-def score_timestamp():
-    return app.config.get("SNAPSHOT_AT") or datetime.now(UTC).isoformat()
+def score_timestamp(tournament_id):
+    updated, stale = snapshot_status(tournament_id)
+    g.cached_scores = stale
+    return updated or app.config.get("SNAPSHOT_AT") or datetime.now(UTC).isoformat()
+
+
+@app.before_request
+def known_tournament():
+    tournament_id = (request.view_args or {}).get("tournament_id")
+    if tournament_id is not None and tournament_id not in TOURNAMENT_INFO:
+        abort(404)
+
+
+@app.after_request
+def cache_public_pages(response):
+    if request.method in {"GET", "HEAD"} and request.endpoint != "static":
+        if response.status_code == 200:
+            response.headers["Cache-Control"] = "public, max-age=0, must-revalidate"
+            response.headers["Vercel-CDN-Cache-Control"] = (
+                "public, s-maxage=5, stale-if-error=3600"
+            )
+        else:
+            response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 def tournament_title(tournament_id):
@@ -96,6 +122,18 @@ def commafy(value: int) -> str:
 @app.template_filter("card_key")
 def card_key(card) -> str:
     return sha256(repr(card).encode("utf-8")).hexdigest()[:16]
+
+
+@app.template_filter("added_time")
+def added_time(value):
+    try:
+        added = datetime.fromisoformat(value)
+        if added.tzinfo is None:
+            added = added.replace(tzinfo=UTC)
+        added = added.astimezone(UTC)
+        return f"{added:%b} {added.day}, {added:%Y %I:%M:%S %p} UTC"
+    except TypeError, ValueError:
+        return "Time unavailable"
 
 
 @app.route("/ranking/<int:tournament_id>")
@@ -116,7 +154,7 @@ def standings_page(tournament_id: int, *, monitor: bool = False):
         cards=cards,
         title=title,
         tournament_id=tournament_id,
-        updated_at=score_timestamp(),
+        updated_at=score_timestamp(tournament_id),
         active_tab="standings",
         monitor=monitor,
     )
@@ -130,6 +168,7 @@ def render_player(tournament_id: int, player_name: str):
         cards = player_cards(tournament_id, player_name)
     if not cards:
         abort(404)
+    player_name = cards[0].player_name
     valid_cards = [card for card in cards if card.is_valid()]
     standings = best_cards(tournament_id, use_cache=True)
     rank = next(
@@ -140,11 +179,11 @@ def render_player(tournament_id: int, player_name: str):
         "player.html",
         cards=cards,
         player_name=player_name,
-        best_card=valid_cards[0] if valid_cards else None,
+        best_card=max(valid_cards, key=Card.computed_score) if valid_cards else None,
         rank=rank,
         title=tournament_title(tournament_id),
         tournament_id=tournament_id,
-        updated_at=score_timestamp(),
+        updated_at=score_timestamp(tournament_id),
         active_tab="standings",
     )
 

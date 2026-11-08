@@ -39,6 +39,15 @@
           button.disabled = screenPages < 2;
         });
         one('[data-monitor-rotate]').disabled = screenPages < 2;
+        // Keep row scores large; shrink only the unusually long ones to fit.
+        all('.monitor-game-score').forEach((score) => {
+          if (!score.getClientRects().length) return;
+          score.style.fontSize = '';
+          if (score.scrollWidth > score.clientWidth) {
+            const size = parseFloat(getComputedStyle(score).fontSize);
+            score.style.fontSize = `${Math.floor((size * score.clientWidth * 10) / score.scrollWidth) / 10}px`;
+          }
+        });
       };
       const changeScreenPage = (direction) => {
         if (screenPages < 2 || screenFading) return;

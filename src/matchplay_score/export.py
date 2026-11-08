@@ -31,7 +31,9 @@ def export_site(output: Path, base_path: str = "") -> list[str]:
             ]
         )
         for player in sorted({card.player_name for card in cards}):
-            routes.append(f"/player/{tournament_id}/{quote(player, safe='')}")
+            routes.append(
+                f"/player/{tournament_id}/{quote(player.replace(' ', '_'), safe='')}"
+            )
     previous_snapshot = web.app.config.get("SNAPSHOT_AT")
     web.app.config["SNAPSHOT_AT"] = datetime.now(UTC).isoformat()
     written = []
