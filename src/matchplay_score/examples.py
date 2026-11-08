@@ -1,6 +1,7 @@
 """Simulated cards for checking the display without touching tournament records."""
 
 from dataclasses import replace
+from datetime import datetime, timedelta
 
 from flask import abort, g, render_template, request, url_for
 
@@ -59,7 +60,20 @@ def example_history():
         card_id=4,
         created_at="2026-11-07T14:00:00Z",
         status="started",
+        is_latest=True,
     )
+    for card in [valid, invalid, abandoned, progress]:
+        card.games = [
+            replace(
+                game,
+                game_id=card.card_id * 100 + index + 1,
+                created_at=(
+                    datetime.fromisoformat(card.created_at)
+                    + timedelta(minutes=2 * (index + 1))
+                ).isoformat(),
+            )
+            for index, game in enumerate(card.games)
+        ]
     return sorted(
         [valid, invalid, abandoned, progress], key=Card.computed_score, reverse=True
     )

@@ -99,13 +99,34 @@
   );
   openFormat();
 
+  // Show recorded times in the viewer's time zone, including after a refresh.
+  function formatAddedTimes() {
+    const formatter = new Intl.DateTimeFormat(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZoneName: 'short',
+    });
+    all('time[data-local-time]').forEach((element) => {
+      const date = new Date(element.dateTime);
+      if (!Number.isNaN(date.getTime())) {
+        element.textContent = formatter.format(date);
+        element.title = element.dateTime;
+      }
+    });
+  }
+  formatAddedTimes();
+
   // Keep commas readable when a display font uses a custom separator
   function formatScoreSeparators() {
     const segmented =
       document.documentElement.dataset.scoreFont === 'segmented' ||
       document.documentElement.dataset.monitor === 'true';
     all(
-      '.monitor-game-score, .score-info > strong, .podium-total, .adjusted-score, .breakdown-total > strong, .history-total, .score-formula strong, .comparison-row > strong, .player-stats > div:nth-child(2) > strong, .score-font-preview > strong',
+      '.score-info > strong, .podium-total, .adjusted-score, .breakdown-total > strong, .history-total, .score-formula strong, .comparison-row > strong, .player-stats > div:nth-child(2) > strong, .score-font-preview > strong',
     ).forEach((score) => {
       if (!segmented) {
         if (score.querySelector('.score-comma')) score.textContent = score.textContent;
@@ -388,6 +409,7 @@
       });
       const scrollY = window.scrollY;
       current.replaceWith(incoming);
+      formatAddedTimes();
       all('.ranking-entry .card-details').forEach(syncCardToggle);
       formatScoreSeparators();
       applyTracking();

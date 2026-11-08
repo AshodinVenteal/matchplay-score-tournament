@@ -50,7 +50,9 @@ def main():
             sync_playwright() as p,
         ):
             browser = launch_browser(p)
-            page = browser.new_page(viewport={"width": 390, "height": 900})
+            page = browser.new_page(
+                viewport={"width": 390, "height": 900}, timezone_id="America/New_York"
+            )
             errors = []
             page.on("pageerror", lambda error: errors.append(str(error)))
             page.goto(
@@ -95,6 +97,17 @@ def main():
             page.set_viewport_size({"width": 1600, "height": 900})
             page.goto(f"http://127.0.0.1:{server.server_port}/examples/")
             expect(page.locator(".history-card")).to_have_count(4)
+            expect(page.locator(".latest-card-badge")).to_have_count(1)
+            expect(page.locator(".last-added-game")).to_have_count(4)
+            expect(page.locator(".card-added time")).to_have_count(4)
+            expect(
+                page.locator('.card-added time[datetime="2026-11-07T14:00:00Z"]')
+            ).to_contain_text("9:00:00 AM EST")
+            for width in [320, 390, 768, 1440]:
+                page.set_viewport_size({"width": width, "height": 900})
+                assert page.evaluate(
+                    "document.documentElement.scrollWidth <= innerWidth"
+                ), width
             for width, height in [
                 (1024, 768),
                 (1280, 720),
@@ -107,6 +120,15 @@ def main():
                 page.wait_for_timeout(100)
                 failures = page.evaluate(GEOMETRY)
                 assert not failures, (width, height, failures)
+                scores = page.locator(".ranking-entry:visible .monitor-game-score")
+                assert scores.evaluate_all(
+                    "els => els.every(el => getComputedStyle(el).fontFamily.includes('monospace') && el.scrollWidth <= el.clientWidth + 1)"
+                )
+                assert page.locator(".monitor-game-score .score-comma").count() == 0
+                if width >= 1600:
+                    assert scores.evaluate_all(
+                        "els => els.every(el => parseFloat(getComputedStyle(el).fontSize) >= 14)"
+                    )
             expect(
                 page.locator(".ranking-entry:visible").first.locator(
                     ".monitor-game-score"

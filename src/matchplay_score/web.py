@@ -22,7 +22,7 @@ from .tournament import (
 
 app = Flask(__name__)
 register_examples(app)
-APP_VERSION = version("matchplay-score") + "-live-cards-2"
+APP_VERSION = version("matchplay-score") + "-card-times-1"
 TOURNAMENT_INFO = {
     281672: "Test Tournament",
     282316: "Score High for Trans Lives",
@@ -122,6 +122,18 @@ def commafy(value: int) -> str:
 @app.template_filter("card_key")
 def card_key(card) -> str:
     return sha256(repr(card).encode("utf-8")).hexdigest()[:16]
+
+
+@app.template_filter("added_time")
+def added_time(value):
+    try:
+        added = datetime.fromisoformat(value)
+        if added.tzinfo is None:
+            added = added.replace(tzinfo=UTC)
+        added = added.astimezone(UTC)
+        return f"{added:%b} {added.day}, {added:%Y %I:%M:%S %p} UTC"
+    except TypeError, ValueError:
+        return "Time unavailable"
 
 
 @app.route("/ranking/<int:tournament_id>")

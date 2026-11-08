@@ -17,6 +17,10 @@ def test_examples_show_all_history_states_without_api_calls(monkeypatch):
         assert "erasing the latest entry" in html
         assert 'data-examples="true"' in html
         assert html.count('class="history-card-heading"') == 4
+        assert html.count('class="last-added-badge latest-card-badge"') == 1
+        assert html.count('class="last-added-badge"') == 4
+        assert 'datetime="2026-11-07T14:00:00Z"' in html
+        assert "Added time unavailable" not in html
         for path in [
             "standings/",
             "monitor/",

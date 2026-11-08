@@ -39,6 +39,8 @@ def test_abandoned_uses_creation_order_not_score_order():
     assert cards[0] is old
     assert old.history_status() == "Abandoned"
     assert new.history_status() == "Card in progress"
+    assert new.is_latest
+    assert not old.is_latest
 
 
 def test_completed_invalid_card_not_abandoned():
@@ -48,3 +50,24 @@ def test_completed_invalid_card_not_abandoned():
         status="completed",
     )
     assert card.history_status() == "Invalid"
+
+
+def test_last_added_game_uses_creation_time_not_score_or_list_order():
+    old, recent = games(["old", "mid"])
+    old.created_at = "2026-11-07T13:00:00+01:00"
+    old.game_id = 100
+    old.score = 99999999
+    recent.created_at = "2026-11-07T12:05:00Z"
+    recent.game_id = 99
+    card = Card("Test Player", [recent, old])
+    assert card.last_added_game() is recent
+
+
+def test_last_added_game_falls_back_to_id_without_inventing_a_time():
+    first, last = games(["old", "new"])
+    first.game_id = 10
+    last.game_id = 11
+    card = Card("Test Player", [last, first])
+    assert card.last_added_game() is last
+    assert last.created_at == ""
+    assert Card("Test Player", games(["old"])).last_added_game() is None

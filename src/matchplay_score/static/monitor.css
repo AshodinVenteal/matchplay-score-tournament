@@ -1044,3 +1044,12 @@ html[data-monitor=true] .monitor-finalists .monitor-podium { flex-basis:59%; }
 @media(min-width:1000px) and (max-height:800px) {
   html[data-monitor=true] .podium-game .monitor-game-block { min-height:22px; }
 }
+
+html[data-monitor=true] .monitor-games .monitor-game-score {
+  font:700 clamp(12px,1.1vw,22px)/1.15 var(--plain-score-font);
+  font-variant-numeric:tabular-nums;
+}
+html[data-monitor=true] .monitor-finalists .monitor-podium { flex-basis:55%; }
+@media(min-width:1000px) and (max-height:800px) {
+  html[data-monitor=true] .monitor-finalists .monitor-podium { flex-basis:54%; }
+}

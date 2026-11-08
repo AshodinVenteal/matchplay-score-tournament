@@ -1,6 +1,13 @@
 __package__ = "matchplay_score"
 from .matchplay_api import get_cards, get_tournament_data, get_tournament_data_cached
-from .tournament import CARD_GAME_LIMIT, UNKNOWN, Card, parse_card, parse_tournament
+from .tournament import (
+    CARD_GAME_LIMIT,
+    UNKNOWN,
+    Card,
+    creation_order,
+    parse_card,
+    parse_tournament,
+)
 
 
 def best_cards(tournament_id: int, use_cache: bool = True) -> list[Card]:
@@ -46,7 +53,10 @@ def player_cards(
     matching = [card for card in cards if card.player_name == player_name]
     dated = [card for card in matching if card.created_at or card.card_id]
     if dated:
-        newest = max(dated, key=lambda card: (card.created_at, card.card_id))
+        newest = max(
+            dated, key=lambda card: creation_order(card.created_at, card.card_id)
+        )
+        newest.is_latest = True
         for card in dated:
             card.abandoned = card is not newest and len(card.games) < CARD_GAME_LIMIT
     return sorted(

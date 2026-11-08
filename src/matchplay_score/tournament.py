@@ -1,10 +1,21 @@
 from collections import Counter
 from dataclasses import dataclass
+from datetime import UTC, datetime
 
 UNKNOWN = "[unknown player]"
 ERAS = ["old", "mid", "new"]
 MAX_PER_ERA = 2
 CARD_GAME_LIMIT = MAX_PER_ERA * len(ERAS)
+
+
+def creation_order(created_at, entry_id=0):
+    try:
+        created = datetime.fromisoformat(created_at)
+        if created.tzinfo is None:
+            created = created.replace(tzinfo=UTC)
+        return created.timestamp(), entry_id
+    except TypeError, ValueError:
+        return float("-inf"), entry_id
 
 
 @dataclass
@@ -33,6 +44,8 @@ class SinglePlayerGame:
     score: int
     multiplier: float
     era: str
+    game_id: int = 0
+    created_at: str = ""
 
     def computed_score(self) -> int:
         return int(self.score * self.multiplier)
@@ -46,6 +59,15 @@ class Card:
     created_at: str = ""
     status: str = ""
     abandoned: bool = False
+    is_latest: bool = False
+
+    def last_added_game(self):
+        recorded = [game for game in self.games if game.created_at or game.game_id]
+        return max(
+            recorded,
+            key=lambda game: creation_order(game.created_at, game.game_id),
+            default=None,
+        )
 
     def computed_score(self) -> int:
         return sum(game.computed_score() for game in self.games)
@@ -178,6 +200,8 @@ def parse_game(game: dict, tournament: Tournament):
         score=game["score"],
         multiplier=arena.multiplier,
         era=arena.era,
+        game_id=game.get("singlePlayerGameId", 0),
+        created_at=game.get("createdAt", ""),
     )
 
 
