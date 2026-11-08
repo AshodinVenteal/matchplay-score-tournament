@@ -1,19 +1,18 @@
 """Short-lived live reads, shared Vercel snapshots, and stale-on-error recovery."""
 
-import logging
 import math
 import os
 from copy import deepcopy
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
+from loguru import logger
 from threading import RLock
 from time import time
 from urllib.parse import urlsplit
 
 import requests
 from vercel.cache import RuntimeCacheError
-
-logger = logging.getLogger(__name__)
+from vercel.functions import RuntimeCache
 
 API_ORIGIN = "https://api.matchplay.events"
 LIVE_TTL = 15
@@ -27,12 +26,11 @@ _session = requests.Session()
 _session.headers.update({"User-Agent": "ScoreHigh/1.1", "Accept": "application/json"})
 
 
-def _shared():
+def _shared() -> RuntimeCache | None:
     global _runtime
     if not os.environ.get("VERCEL"):
         return None
     if _runtime is None:
-        from vercel.functions import RuntimeCache
 
         namespace = "scorehigh-live-v2-" + os.environ.get(
             "VERCEL_PROJECT_ID", "default"
@@ -41,7 +39,7 @@ def _shared():
     return _runtime
 
 
-def _read(key):
+def _read(key: str) -> dict:
     shared = _shared()
     try:
         value = shared.get(key) if shared else None
@@ -58,7 +56,7 @@ def _read(key):
     return deepcopy(value if value is not None else _cache.get(key))
 
 
-def _write(key, value):
+def _write(key: str, value: dict):
     _cache[key] = deepcopy(value)
     shared = _shared()
     if shared:
@@ -141,7 +139,8 @@ def get_tournament_snapshot(tournament_id):
             cards = get_paginated_data(
                 f"{API_ORIGIN}/api/tournaments/{tournament_id}/cards"
             )
-        except requests.RequestException, ValueError:
+        except (requests.RequestException, ValueError) as e:
+            logger.warning(f"API error in get_tournament_snapshot: {e!r}")
             if saved and time() - saved["fetched_at"] < STALE_TTL:
                 saved["stale"] = True
                 return saved
@@ -159,19 +158,19 @@ def get_tournament_snapshot(tournament_id):
         _lock.release()
 
 
-def get_tournament_data_cached(tournament_id):
+def get_tournament_data_cached(tournament_id: int):
     return get_tournament_data(tournament_id)
 
 
-def get_tournament_data(tournament_id):
+def get_tournament_data(tournament_id: int):
     return get_tournament_snapshot(tournament_id)["tournament"]
 
 
-def get_cards(tournament_id):
+def get_cards(tournament_id: int):
     return get_tournament_snapshot(tournament_id)["cards"]
 
 
-def get_paginated_data(url):
+def get_paginated_data(url: str) -> list[dict]:
     items = []
     visited = set()
     while url:
@@ -184,7 +183,7 @@ def get_paginated_data(url):
     return items
 
 
-def snapshot_status(tournament_id):
+def snapshot_status(tournament_id: int) -> tuple[str | None, bool]:
     saved = _read(f"tournament:{tournament_id}")
     if not saved:
         return None, False
