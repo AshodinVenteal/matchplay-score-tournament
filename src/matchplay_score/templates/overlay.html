@@ -18,7 +18,7 @@
         <article class="broadcast-card" data-card-id="{{ section }}-{{ card.card_id or card.player_name }}" data-card-section="{{ section }}" {% if not loop.first %}hidden{% endif %}>
           <header class="broadcast-player">
             <div class="broadcast-player-heading">{% if section == 'top' %}<span class="broadcast-rank">#{{ rank }}</span>{% endif %}<h2>{{ card.player_name }}</h2></div>
-            <p>{% if options.mode == 'cycle' %}<span class="broadcast-section-label">{{ 'Top card' if section == 'top' else 'Recent card' }}</span> · {% endif %}{{ card.history_status() }} · {{ card.games|length }}/{{ card_game_limit }} games
+            <p><span class="broadcast-section-label" data-section="{{ section }}">{{ 'Top Card' if section == 'top' else 'Recent Card' }}</span><span>{{ card.history_status() }} · {{ card.games|length }}/{{ card_game_limit }} games</span>
               {% if last and last.created_at %}<span class="broadcast-submitted">Last score <time datetime="{{ last.created_at }}">{{ last.created_at|added_time }}</time></span>{% endif %}
             </p>
             <strong class="broadcast-total">{{ card.computed_score()|commafy }}</strong><span class="broadcast-total-label">Adjusted card total</span>
