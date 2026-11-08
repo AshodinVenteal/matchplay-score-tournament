@@ -13,11 +13,6 @@ body {
   background: #1d1c25; border: 1px solid #55515f; border-radius: 12px;
   box-shadow: 0 3px 6px #0005;
 }
-.broadcast-header { padding: 18px 22px 14px; border-top: 4px solid #a8def0; border-bottom: 1px solid #f0c6d733; }
-.broadcast-brand { color: #a8def0; font: 18px/1.5 'ScoreHigh Logo', monospace; }
-.broadcast-brand small { color: #f0c6d7; font: 12px var(--text-font); white-space: nowrap; }
-.broadcast-mode { float: right; color: #f0c6d7; font-size: 15px; line-height: 1.8; }
-.broadcast-header h1 { font-size: 21px; margin: 7px 0 0; overflow-wrap: anywhere; }
 .broadcast-stage { flex: 1; min-height: 0; padding: 0 22px; transition: opacity 300ms ease; }
 .broadcast-stage.is-fading { opacity: 0; }
 [data-card-deck], .broadcast-card { height: 100%; }
@@ -52,11 +47,8 @@ body {
 .broadcast-last-label { color: #f0c6d7; font-size: 10px; position: absolute; right: 12px; top: 3px; }
 .broadcast-last-game .broadcast-era { padding-right: 54px; }
 .broadcast-empty { --era-color: #8c879b; opacity: .18; }
-.broadcast-footer { display: flex; justify-content: space-between; gap: 8px; padding: 10px 22px; border-top: 1px solid #a8def033; color: #c4bfce; font-size: 12px; }
 .broadcast-empty-state { padding: 35px 0; }
 @media (max-height: 740px) {
-  .broadcast-header { padding: 10px 16px; }
-  .broadcast-header h1 { font-size: 18px; margin-top: 3px; }
   .broadcast-stage { padding: 0 16px; }
   .broadcast-player { padding: 10px 0; }
   .broadcast-player h2 { font-size: 25px; }
@@ -65,16 +57,11 @@ body {
   .broadcast-games { gap: 5px; padding-bottom: 8px; }
   .broadcast-game { padding: 5px 8px; gap: 3px 8px; }
   .broadcast-machine strong { font-size: 16px; }
-  .broadcast-footer { padding: 7px 16px; }
 }
 @media (max-width: 400px) {
-  .broadcast-header { padding-left: 12px; padding-right: 12px; }
   .broadcast-stage { padding: 0 12px; }
-  .broadcast-brand { font-size: 14px; }
-  .broadcast-brand small { display: block; }
   .broadcast-player h2 { font-size: 24px; }
   .broadcast-game { padding-left: 7px; padding-right: 7px; column-gap: 6px; }
-  .broadcast-footer { padding-left: 12px; padding-right: 12px; font-size: 10px; }
 }
 @media (prefers-reduced-motion: reduce) { .broadcast-stage { transition: none; } }
 
@@ -82,11 +69,6 @@ body {
 @media (max-height: 480px) {
   body { padding: 3px; }
   .broadcast-panel { max-width: none; border-radius: 4px; box-shadow: none; }
-  .broadcast-header { display: flex; align-items: center; gap: 10px; padding: 4px 10px; border-top-width: 2px; }
-  .broadcast-brand { flex-shrink: 0; font-size: 11px; line-height: 1.3; }
-  .broadcast-brand small { display: none; }
-  .broadcast-header h1 { flex: 1; min-width: 0; order: 1; font-size: 12px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
-  .broadcast-mode { order: 2; flex-shrink: 0; font-size: 10px; line-height: 1.3; }
   .broadcast-stage { padding: 0 10px; }
   .broadcast-player { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; padding: 6px 0; }
   .broadcast-player-heading { grid-column: 1; gap: 8px; min-width: 0; }
@@ -107,5 +89,4 @@ body {
   .broadcast-points::after { content: ' pts'; font: 8px var(--text-font); color: #c4bfce; }
   .broadcast-last-label { position: static; order: -1; font-size: 8px; line-height: 1; color: #f0c6d7; }
   .broadcast-last-game .broadcast-era { padding-right: 0; }
-  .broadcast-footer { padding: 3px 10px; font-size: 9px; line-height: 1.1; }
 }

@@ -11,11 +11,6 @@
 </head>
 <body data-interval="{{ options.seconds }}">
   <main class="broadcast-panel" aria-label="Tournament card overlay">
-    <header class="broadcast-header">
-      <span class="broadcast-brand">SCORE HIGH <small>4 TRANS LIVES</small></span>
-      <span class="broadcast-mode">{{ 'Top cards' if options.mode == 'top' else 'Recent cards' }}{% if example_mode %} · Demo{% endif %}</span>
-      <h1>{{ title }}</h1>
-    </header>
     <section class="broadcast-stage" aria-label="Rotating cards">
       <div data-card-deck>
         {% for card, rank in entries %}
@@ -48,7 +43,8 @@
         {% endfor %}
       </div>
     </section>
-    <footer class="broadcast-footer"><span>score.arborelia.net</span><span data-broadcast-status>{{ 'Cached scores' if cached_scores else 'Checks every 15s' }}</span><span data-broadcast-position></span></footer>
+    <span data-broadcast-status hidden>{{ 'Cached scores' if cached_scores else 'Checks every 15s' }}</span>
+    <span data-broadcast-position hidden></span>
     <span data-snapshot-stale="{{ 'true' if cached_scores else 'false' }}" hidden></span>
   </main>
 </body>

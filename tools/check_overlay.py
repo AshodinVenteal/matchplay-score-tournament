@@ -33,6 +33,7 @@ def main():
             page.goto(base + "/overlay/282630?mode=recent&seconds=8")
             page.evaluate("document.fonts.ready")
             expect(page.locator(".broadcast-card:visible")).to_have_count(1)
+            expect(page.locator(".broadcast-header, .broadcast-footer")).to_have_count(0)
             assert (
                 page.locator(".broadcast-card:visible").get_attribute("data-card-id")
                 == "4"
