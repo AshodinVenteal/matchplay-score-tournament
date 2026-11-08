@@ -142,7 +142,7 @@ ARENAS = [
     ),
     Arena(name="Pokémon (Premium)", short_name="Pokémon", era="new", multiplier=0.33),
     Arena(name="Dune", short_name="Dune", era="new", multiplier=0.36),
-    Arena(name="Fallout (LE)", short_name="Fallout", era="new", multiplier=0.43),
+    Arena(name="Fallout (LE)", short_name="Fallout", era="new", multiplier=0.39),
     # Test / alternate games
     Arena(
         name="Bram Stoker's Dracula", short_name="Dracula", era="mid", multiplier=0.5
