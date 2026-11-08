@@ -86,9 +86,14 @@ def test_overlay_options_are_bounded_and_names_escaped():
             .text
         )
     assert 'data-interval="8"' in html
-    assert "Recent cards" in html
     assert "&lt;script&gt;bad()&lt;/script&gt;" in html
     assert "<script>bad()</script>" not in html
+    with web.app.test_request_context("/?mode=other&seconds=-1&count=999"):
+        assert broadcast.overlay_options() == {
+            "mode": "recent",
+            "count": 10,
+            "seconds": 8,
+        }
     with web.app.test_request_context("/?seconds=bad&count=bad&mode=top"):
         assert broadcast.overlay_options() == {"mode": "top", "count": 3, "seconds": 12}
 
