@@ -58,7 +58,7 @@ class Card:
     card_id: int = 0
     created_at: str = ""
     status: str = ""
-    abandoned: bool = False
+    voided: bool = False
     is_latest: bool = False
 
     def last_added_game(self):
@@ -73,6 +73,8 @@ class Card:
         return sum(game.computed_score() for game in self.games)
 
     def is_valid(self):
+        if self.voided:
+            return False
         counts = Counter(game.era for game in self.games)
         return all(counts[era] <= MAX_PER_ERA for era in ERAS)
 
@@ -86,12 +88,12 @@ class Card:
         ]
 
     def history_status(self):
+        if self.voided:
+            return "Voided"
         if not self.is_valid() and (
             self.status == "completed" or len(self.games) >= CARD_GAME_LIMIT
         ):
             return "Invalid"
-        if self.abandoned:
-            return "Abandoned"
         if len(self.games) < CARD_GAME_LIMIT and self.status != "completed":
             return "Card in progress"
         if not self.is_valid():
@@ -212,9 +214,10 @@ def parse_card(card: dict, tournament: Tournament) -> Card:
         games=[
             parse_game(game, tournament)
             for game in card["singlePlayerGames"]
-            if not game.get("voided", False)
+            if card.get("voided", False) or not game.get("voided", False)
         ],
         card_id=card.get("cardId", 0),
         created_at=card.get("createdAt", ""),
         status=card.get("status", ""),
+        voided=bool(card.get("voided", False)),
     )

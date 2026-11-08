@@ -34,7 +34,7 @@ def main():
         card_id=2,
         status="completed",
     )
-    abandoned = Card("Test Player", games(["old", "new"]), card_id=1, abandoned=True)
+    voided = Card("Test Player", games(["old", "new"]), card_id=1, voided=True)
     in_progress = Card("Test Player", games(["mid"]), card_id=4)
     server = make_server("127.0.0.1", 0, web.app)
     thread = Thread(target=server.serve_forever, daemon=True)
@@ -44,7 +44,7 @@ def main():
             patch.object(
                 web,
                 "player_cards",
-                return_value=[valid, invalid, abandoned, in_progress],
+                return_value=[valid, invalid, voided, in_progress],
             ),
             patch.object(web, "best_cards", return_value=[valid]),
             sync_playwright() as p,
@@ -65,7 +65,7 @@ def main():
             expect(page.locator(".invalid-card")).to_contain_text(
                 "erasing the latest entry"
             )
-            expect(page.locator(".abandoned-notice")).to_contain_text("Abandoned")
+            expect(page.locator(".voided-notice")).to_contain_text("Voided")
             expect(page.locator(".card-label").last).to_contain_text("Card in progress")
             for width in [320, 390, 768, 1440]:
                 page.set_viewport_size({"width": width, "height": 900})
@@ -140,7 +140,7 @@ def main():
         server.shutdown()
         thread.join()
     print(
-        "PASS: native commas across all fonts, single-line player totals, invalid and abandoned labels, and monitor row scores."
+        "PASS: native commas across all fonts, single-line player totals, invalid and voided labels, and monitor row scores."
     )
 
 

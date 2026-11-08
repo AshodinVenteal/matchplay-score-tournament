@@ -11,7 +11,7 @@ def test_examples_show_all_history_states_without_api_calls(monkeypatch):
         response = client.get("/examples/")
         assert response.status_code == 200
         html = response.text
-        for label in ["Completed", "Invalid", "Abandoned", "Card in progress"]:
+        for label in ["Completed", "Invalid", "Voided", "Card in progress"]:
             assert label in html
         assert "3 Mid games; the limit is 2." in html
         assert "erasing the latest entry" in html

@@ -42,9 +42,9 @@ On Vercel, the Python SDK stores successful responses and cooldown state in the
 regional Runtime Cache. All functions use the `iad1` region. A process lock
 coalesces concurrent reads in each worker; Runtime Cache reuses data between
 workers. This cache is not a distributed lock, so simultaneous cold workers can
-still overlap requests. Each worker also respects shared pacing and cooldown
-state. Requests are spaced at least one second apart, with no automatic HTTP
-retries. Rate-limit responses back off and honor longer Retry-After values.
+still overlap requests. Rate-limit responses back off and honor longer
+Retry-After values, with no automatic HTTP retries or artificial sleeps.
+Cached readers bypass an active refresh instead of waiting behind its lock.
 
 A failed card page never replaces a complete list with partial results. Previously
 fetched scores remain available for up to an hour during an outage, with their
@@ -55,13 +55,14 @@ Deploy with `vercel deploy --prod` after `vercel link`. No external snapshot URL
 or local disk cache is required. The separate GitHub Pages exporter is still
 available for static snapshots; it cannot provide live tournament updates.
 
-Player URLs use underscores for spaces. Player histories mark older incomplete
-cards as Abandoned using card creation order. Completed cards over a category
+Player URLs use underscores for spaces. Player histories show Voided only when
+Match Play flags the card as voided, and exclude it from standings. Starting a
+new card does not void an earlier incomplete card. Completed cards over a category
 limit are greyed out with the reason and scorekeeper correction instructions;
 the site never erases scores itself. Monitor ranking rows show each machine's
 raw score beneath its tile.
 
-The `/examples/` page shows simulated valid, invalid, abandoned, and in-progress
+The `/examples/` page shows simulated valid, invalid, voided, and in-progress
 cards. `/examples/standings/` and `/examples/monitor/` show 25 simulated players.
 These pages make no Match Play requests and do not change tournament records.
 

@@ -47,12 +47,12 @@ def example_history():
         created_at="2026-11-07T13:00:00Z",
         status="completed",
     )
-    abandoned = Card(
+    voided = Card(
         EXAMPLE_PLAYER,
         lineup[:2],
         card_id=1,
         created_at="2026-11-07T11:00:00Z",
-        abandoned=True,
+        voided=True,
     )
     progress = Card(
         EXAMPLE_PLAYER,
@@ -62,7 +62,7 @@ def example_history():
         status="started",
         is_latest=True,
     )
-    for card in [valid, invalid, abandoned, progress]:
+    for card in [valid, invalid, voided, progress]:
         card.games = [
             replace(
                 game,
@@ -75,7 +75,7 @@ def example_history():
             for index, game in enumerate(card.games)
         ]
     return sorted(
-        [valid, invalid, abandoned, progress],
+        [valid, invalid, voided, progress],
         key=lambda card: creation_order(card.created_at, card.card_id),
         reverse=True,
     )

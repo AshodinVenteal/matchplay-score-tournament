@@ -25,7 +25,7 @@ def test_invalid_only_means_too_many_games_in_a_category():
     assert partial.history_status() == "Card in progress"
 
 
-def test_abandoned_uses_creation_order_not_score_order():
+def test_newer_card_does_not_void_an_older_incomplete_card():
     tournament = {"players": [{"playerId": 1, "name": "Test Player"}], "arenas": []}
     old = Card("Test Player", games(["old"]), card_id=1, created_at="2026-11-01")
     old.games[0].score = 1000000
@@ -37,19 +37,57 @@ def test_abandoned_uses_creation_order_not_score_order():
     ):
         cards = ranking.player_cards(1, "Test Player")
     assert cards[0] is new
-    assert old.history_status() == "Abandoned"
+    assert old.history_status() == "Card in progress"
+    assert not old.voided
     assert new.history_status() == "Card in progress"
     assert new.is_latest
     assert not old.is_latest
 
 
-def test_completed_invalid_card_not_abandoned():
+def test_completed_invalid_card_not_voided():
     card = Card(
         "Test Player",
         games(["old", "old", "mid", "mid", "mid", "new"]),
         status="completed",
     )
     assert card.history_status() == "Invalid"
+
+
+def test_matchplay_voided_card_stays_in_history_but_not_standings():
+    tournament = {
+        "players": [{"playerId": 1, "name": "Test Player"}],
+        "arenas": [
+            {"arenaId": 1, "name": "Stars", "tournamentArena": {"status": "active"}}
+        ],
+    }
+    valid = {
+        "cardId": 1,
+        "playerId": 1,
+        "voided": False,
+        "singlePlayerGames": [
+            {"arenaId": 1, "playerId": 1, "score": 1000, "voided": False},
+        ],
+    }
+    voided = {
+        "cardId": 2,
+        "playerId": 1,
+        "voided": True,
+        "singlePlayerGames": [
+            {"arenaId": 1, "playerId": 1, "score": 9999999, "voided": True},
+        ],
+    }
+    with (
+        patch.object(ranking, "get_tournament_data_cached", return_value=tournament),
+        patch.object(ranking, "get_cards", return_value=[valid, voided]),
+    ):
+        standings = ranking.best_cards(1)
+        history = ranking.player_cards(1, "Test Player")
+    assert len(standings) == 1
+    assert standings[0].card_id == 1
+    assert len(history) == 2
+    assert history[0].history_status() == "Voided"
+    assert len(history[0].games) == 1
+    assert history[0].computed_score() > standings[0].computed_score()
 
 
 def test_last_added_game_uses_creation_time_not_score_or_list_order():

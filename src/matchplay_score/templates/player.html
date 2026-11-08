@@ -9,12 +9,12 @@
 <div class="player-stats panel"><div><span>Tournament rank</span><strong>{{ '#' ~ rank if rank else 'Unranked' }}</strong></div><div><span>Best valid card</span><strong>{{ best_card.computed_score()|commafy if best_card else '—' }}</strong></div><div><span>Cards recorded</span><strong>{{ cards|length }}</strong></div></div>
 <div class="section-heading history-heading"><h3>Card history</h3><span class="muted">Newest first</span></div>
 {% for card in cards %}
-<article class="panel history-card {% if card.history_status() == "Invalid" %}invalid-card{% endif %}" data-card-key="{{ card|card_key }}"><div class="history-card-heading"><div><h3>Card {{ loop.index }}{% if card.is_latest %} <span class="last-added-badge latest-card-badge">Latest card</span>{% endif %}</h3><span class="card-label">{{ card.history_status() }}{% if card == best_card %} &middot; Best valid card{% endif %} · {{ card.games|length }} games</span><span class="card-added">{% if card.created_at %}Added <time datetime="{{ card.created_at }}" data-local-time>{{ card.created_at|added_time }}</time>{% else %}Added time unavailable{% endif %}</span></div><strong class="history-total">{{ card.computed_score()|commafy }}</strong></div>
+<article class="panel history-card {% if card.history_status() == "Invalid" %}invalid-card{% elif card.voided %}voided-card{% endif %}" data-card-key="{{ card|card_key }}"><div class="history-card-heading"><div><h3>Card {{ loop.index }}{% if card.is_latest %} <span class="last-added-badge latest-card-badge">Latest card</span>{% endif %}</h3><span class="card-label">{{ card.history_status() }}{% if card == best_card %} &middot; Best valid card{% endif %} · {{ card.games|length }} games</span><span class="card-added">{% if card.created_at %}Added <time datetime="{{ card.created_at }}" data-local-time>{{ card.created_at|added_time }}</time>{% else %}Added time unavailable{% endif %}</span></div><strong class="history-total">{{ card.computed_score()|commafy }}</strong></div>
 {% if card.history_status() == "Invalid" %}
 <p class="invalid-notice"><strong>Invalid card &middot; excluded from standings.</strong>
 {% for reason in card.invalid_reasons() %}{{ reason }} {% endfor %}
 A scorekeeper will make this card valid by erasing the latest entry in each category over the limit. A completed card needs two Old, two Mid, and two New games.</p>
-{% elif card.abandoned %}<p class="abandoned-notice">Abandoned &middot; a newer card was started before this card reached six games.</p>{% endif %}
+{% elif card.voided %}<p class="voided-notice">Voided in Match Play &middot; excluded from standings.</p>{% endif %}
 <details class="card-details" {% if example_mode|default(false) or card.is_latest or card == best_card or not card.is_valid() %}open{% endif %}><summary><span>Machine scores &amp; multipliers</span><span class="chevron" aria-hidden="true">⌄</span></summary>{{ breakdown(card, show_added=True) }}</details></article>
 {% endfor %}
 </div>

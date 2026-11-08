@@ -1,7 +1,6 @@
 __package__ = "matchplay_score"
 from .matchplay_api import get_cards, get_tournament_data, get_tournament_data_cached
 from .tournament import (
-    CARD_GAME_LIMIT,
     UNKNOWN,
     Card,
     creation_order,
@@ -57,8 +56,6 @@ def player_cards(
             dated, key=lambda card: creation_order(card.created_at, card.card_id)
         )
         newest.is_latest = True
-        for card in dated:
-            card.abandoned = card is not newest and len(card.games) < CARD_GAME_LIMIT
     return sorted(
         matching,
         key=lambda card: creation_order(card.created_at, card.card_id),
