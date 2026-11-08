@@ -15,7 +15,7 @@ from vercel.cache import RuntimeCacheError
 from vercel.functions import RuntimeCache
 
 API_ORIGIN = "https://api.matchplay.events"
-LIVE_TTL = 15
+LIVE_TTL = 25
 STALE_TTL = 3600
 _cache = {}
 _lock = RLock()

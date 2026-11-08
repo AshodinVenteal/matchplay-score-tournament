@@ -401,9 +401,9 @@
         day: 'numeric',
         year: 'numeric',
       });
-      status.textContent = `Snapshot: ${date}, ${time} · ${auto ? 'checks every 10s.' : 'checks paused.'}`;
+      status.textContent = `Snapshot: ${date}, ${time} · ${auto ? 'checks every 25s.' : 'checks paused.'}`;
     } else {
-      status.textContent = `Snapshot: ${time} · ${auto ? 'checks every 10s.' : 'checks paused.'}`;
+      status.textContent = `Snapshot: ${time} · ${auto ? 'checks every 25s.' : 'checks paused.'}`;
     }
     if (status.dataset.cached === 'true') status.textContent += ' Cached scores; retrying.';
   };
