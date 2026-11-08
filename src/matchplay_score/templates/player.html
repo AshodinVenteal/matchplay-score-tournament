@@ -7,7 +7,7 @@
 <div class="player-tracking" data-tracked-player="{{ player_name }}" data-tournament="{{ tournament_id }}">{% include "player_controls.html" %}</div>
 <div data-score-content>
 <div class="player-stats panel"><div><span>Tournament rank</span><strong>{{ '#' ~ rank if rank else 'Unranked' }}</strong></div><div><span>Best valid card</span><strong>{{ best_card.computed_score()|commafy if best_card else '—' }}</strong></div><div><span>Cards recorded</span><strong>{{ cards|length }}</strong></div></div>
-<div class="section-heading history-heading"><h3>Card history</h3><span class="muted">Highest total first</span></div>
+<div class="section-heading history-heading"><h3>Card history</h3><span class="muted">Newest first</span></div>
 {% for card in cards %}
 <article class="panel history-card {% if card.history_status() == "Invalid" %}invalid-card{% endif %}" data-card-key="{{ card|card_key }}"><div class="history-card-heading"><div><h3>Card {{ loop.index }}{% if card.is_latest %} <span class="last-added-badge latest-card-badge">Latest card</span>{% endif %}</h3><span class="card-label">{{ card.history_status() }}{% if card == best_card %} &middot; Best valid card{% endif %} · {{ card.games|length }} games</span><span class="card-added">{% if card.created_at %}Added <time datetime="{{ card.created_at }}" data-local-time>{{ card.created_at|added_time }}</time>{% else %}Added time unavailable{% endif %}</span></div><strong class="history-total">{{ card.computed_score()|commafy }}</strong></div>
 {% if card.history_status() == "Invalid" %}

@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 from flask import abort, g, render_template, request, url_for
 
-from .tournament import ARENAS, Card, SinglePlayerGame
+from .tournament import ARENAS, Card, SinglePlayerGame, creation_order
 
 EXAMPLE_ID = 25025
 EXAMPLE_PLAYER = "Alex Morgan"
@@ -75,7 +75,9 @@ def example_history():
             for index, game in enumerate(card.games)
         ]
     return sorted(
-        [valid, invalid, abandoned, progress], key=Card.computed_score, reverse=True
+        [valid, invalid, abandoned, progress],
+        key=lambda card: creation_order(card.created_at, card.card_id),
+        reverse=True,
     )
 
 

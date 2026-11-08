@@ -61,7 +61,7 @@ def player_cards(
             card.abandoned = card is not newest and len(card.games) < CARD_GAME_LIMIT
     return sorted(
         matching,
-        key=Card.computed_score,
+        key=lambda card: creation_order(card.created_at, card.card_id),
         reverse=True,
     )
 

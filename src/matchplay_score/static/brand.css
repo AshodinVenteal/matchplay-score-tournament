@@ -106,12 +106,17 @@ html[data-monitor=true] .example-banner { display:none; }
   font:12px/1.5 system-ui,sans-serif;
 }
 .machine-info .game-added-time {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:4px 8px;
   flex-basis:100%;
   color:var(--muted);
   font:11px/1.5 system-ui,sans-serif;
 }
 .game-row.last-added-game {
   box-shadow:inset 3px 0 0 var(--pride-blue);
+  padding-inline:10px;
 }
 
 :root {

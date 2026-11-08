@@ -84,6 +84,17 @@ def test_empty_standings(client):
     assert "No valid cards recorded yet." in response.get_data(as_text=True)
 
 
+def test_newest_card_first_does_not_replace_higher_personal_best(client, valid):
+    newer = make_card("Elia Lake", [("Stars", 1000, 1, "old")])
+    with (
+        patch.object(web, "player_cards", return_value=[newer, valid]),
+        patch.object(web, "best_cards", return_value=[valid]),
+    ):
+        html = client.get("/player/281672/Elia_Lake").text
+    assert "Best valid card</span><strong>99,460,000" in html
+    assert "Newest first" in html
+
+
 def test_upstream_outage_is_clear_and_retryable(client):
     with patch.object(web, "best_cards", side_effect=requests.Timeout):
         response = client.get("/ranking/281672")

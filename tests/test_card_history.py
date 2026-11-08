@@ -36,7 +36,7 @@ def test_abandoned_uses_creation_order_not_score_order():
         patch.object(ranking, "parse_card", side_effect=[new, old]),
     ):
         cards = ranking.player_cards(1, "Test Player")
-    assert cards[0] is old
+    assert cards[0] is new
     assert old.history_status() == "Abandoned"
     assert new.history_status() == "Card in progress"
     assert new.is_latest

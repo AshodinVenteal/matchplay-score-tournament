@@ -22,7 +22,7 @@ from .tournament import (
 
 app = Flask(__name__)
 register_examples(app)
-APP_VERSION = version("matchplay-score") + "-monitor-spacing-1"
+APP_VERSION = version("matchplay-score") + "-history-order-1"
 TOURNAMENT_INFO = {
     281672: "Test Tournament",
     282316: "Score High for Trans Lives",
@@ -179,7 +179,7 @@ def render_player(tournament_id: int, player_name: str):
         "player.html",
         cards=cards,
         player_name=player_name,
-        best_card=valid_cards[0] if valid_cards else None,
+        best_card=max(valid_cards, key=Card.computed_score) if valid_cards else None,
         rank=rank,
         title=tournament_title(tournament_id),
         tournament_id=tournament_id,
