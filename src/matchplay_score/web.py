@@ -8,6 +8,7 @@ import requests
 from flask import Flask, abort, g, render_template, request
 
 from .branding import REPOSITORY_DESCRIPTION, SITE_DESCRIPTION, SITE_TITLE
+from .broadcast import overlay_entries, overlay_options, tournament_cards
 from .examples import register_examples
 from .flyers import FLYER_IMAGES
 from .matchplay_api import get_tournament_data_cached, snapshot_status
@@ -23,7 +24,7 @@ from .tournament import (
 
 app = Flask(__name__)
 register_examples(app)
-APP_VERSION = version("matchplay-score") + "-atkinson-text-1"
+APP_VERSION = version("matchplay-score") + "-obs-cards-6"
 TOURNAMENT_INFO = {
     281672: "Test Tournament",
     282316: "Score High for Trans Lives",
@@ -148,6 +149,46 @@ def render_monitor(tournament_id: int):
     return standings_page(tournament_id, monitor=True)
 
 
+@app.route("/obs/<int:tournament_id>")
+def render_obs(tournament_id: int):
+    # Configuration itself needs no Match Play data; only the preview loads cards.
+    return render_template(
+        "obs.html",
+        title=tournament_title(tournament_id),
+        tournament_id=tournament_id,
+        active_tab="obs",
+    )
+
+
+@app.route("/overlay/<int:tournament_id>")
+def render_overlay(tournament_id: int):
+    options = overlay_options()
+    try:
+        cards = tournament_cards(tournament_id)
+    except requests.RequestException as error:
+        app.logger.warning(
+            "OBS snapshot unavailable: tournament=%s error=%s reason=%s; no Match Play request made",
+            tournament_id,
+            type(error).__name__,
+            str(error) or "No saved scores available",
+        )
+        # Even a cold-start outage must leave OBS with a transparent, retrying view.
+        return render_template(
+            "overlay.html",
+            title=tournament_title(tournament_id),
+            entries=[],
+            options=options,
+            cached_scores=True,
+        ), 503
+    return render_template(
+        "overlay.html",
+        title=tournament_title(tournament_id),
+        entries=overlay_entries(cards, options["mode"], options["count"]),
+        options=options,
+        updated_at=score_timestamp(tournament_id),
+    )
+
+
 def standings_page(tournament_id: int, *, monitor: bool = False):
     cards = best_cards(tournament_id, use_cache=True)
     title = tournament_title(tournament_id)
@@ -244,7 +285,12 @@ def render_how_it_works(tournament_id: int):
 
 @app.errorhandler(requests.RequestException)
 def upstream_error(error):
-    print(error)
+    app.logger.error(
+        "Tournament data unavailable: path=%s; error=%s",
+        request.path,
+        type(error).__name__,
+        exc_info=(type(error), error, error.__traceback__),
+    )
     return (
         render_template(
             "error.html",
