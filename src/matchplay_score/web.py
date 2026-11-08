@@ -313,9 +313,15 @@ def not_found(error):
     )
 
 
-@app.route("/")
+# temporarily moved to /index
+@app.route("/index")
 def index():
     return render_template(
         "index.html",
         tournaments=TOURNAMENT_INFO,
     )
+
+
+@app.route("/")
+def front_page_redirect():
+    return standings_page(282316)
