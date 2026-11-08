@@ -122,3 +122,12 @@ html[data-monitor=true] .example-banner { display:none; }
 :root {
   --plain-score-font:'Cascadia Mono','SFMono-Regular',Consolas,'Liberation Mono',monospace;
 }
+
+@font-face {
+  font-family:'Arborelia Header';
+  src:url('fonts/atkinson-hyperlegible/AtkinsonHyperlegible-Bold.ttf') format('truetype');
+  font-weight:700;
+  font-style:normal;
+  font-display:swap;
+}
+.monitor-site-link { display:none; }

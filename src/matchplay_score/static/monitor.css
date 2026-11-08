@@ -1,5 +1,35 @@
 /* Event display, podium, pagination, and viewport sizing. */
 
+html[data-monitor=true] { --monitor-qr-size:111px; }
+
+html[data-monitor=true] .monitor-site-link {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+  width:var(--monitor-qr-size);
+  color:var(--ink);
+  text-decoration:none;
+  flex-shrink:0;
+}
+
+html[data-monitor=true] .monitor-site-link > span {
+  display:block;
+  width:100%;
+  text-align:center;
+  font:700 calc(var(--monitor-qr-size) / 10)/1.1 'Arborelia Header',sans-serif;
+  white-space:nowrap;
+}
+
+html[data-monitor=true] .monitor-qr {
+  display:block;
+  width:var(--monitor-qr-size);
+  height:var(--monitor-qr-size);
+  flex-shrink:0;
+  background:#fff;
+  image-rendering:pixelated;
+}
+
 html[data-monitor=true] .breakdown-toggle {
   display: none;
 }
@@ -1073,4 +1103,46 @@ html[data-monitor=true] .monitor-games .monitor-game-score {
 html[data-monitor=true] .monitor-finalists .monitor-podium { flex-basis:55%; }
 @media(min-width:1000px) and (max-height:800px) {
   html[data-monitor=true] .monitor-finalists .monitor-podium { flex-basis:54%; }
+}
+
+/* The QR/link and tournament title share the display header. */
+html[data-monitor=true] .tournament-heading {
+  display:grid;
+  grid-template-columns:var(--monitor-qr-size) minmax(0,1fr) var(--monitor-qr-size);
+  align-items:center;
+  gap:24px;
+  max-width:none;
+  padding-bottom:8px;
+}
+html[data-monitor=true] .tournament-heading > div {
+  grid-column:2;
+  min-width:0;
+  padding-top:24px;
+  text-align:center;
+}
+html[data-monitor=true] .tournament-heading h1 {
+  font-size:clamp(30px,3vw,56px);
+  line-height:1.15;
+}
+@media (min-height:1000px) {
+  html[data-monitor=true] { --monitor-qr-size:148px; }
+}
+@media (max-height:800px) {
+  html[data-monitor=true] { --monitor-qr-size:74px; }
+}
+
+/* Compact tiles keep the QR header from squeezing scores out of their rows. */
+html[data-monitor=true] .podium-game .monitor-game-block {
+  min-height:0;
+  height:clamp(18px,2.5vh,28px);
+}
+html[data-monitor=true] .podium-raw,
+html[data-monitor=true] .podium-multiplier,
+html[data-monitor=true] .podium-game-points { line-height:1.1; }
+html[data-monitor=true] .monitor-games .monitor-game-score { padding-block:0; }
+html[data-monitor=true] .monitor-finalists .monitor-podium { flex-basis:50%; }
+@media (max-height:800px) {
+  html[data-monitor=true] .monitor-finalists .monitor-podium { flex-basis:54%; }
+  html[data-monitor=true] .podium-game .monitor-game-block { height:18px; font-size:10px; }
+  html[data-monitor=true] .monitor-games .monitor-game-cell .monitor-game-block { min-height:16px; }
 }

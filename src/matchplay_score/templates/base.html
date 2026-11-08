@@ -87,6 +87,11 @@
 
     {% if tournament_id is defined %}
     <section class="tournament-heading">
+      <a class="monitor-site-link" href="https://score.arborelia.net/" aria-label="Open score.arborelia.net">
+        <img class="monitor-qr" src="{{ url_for('static', filename='images/score-arborelia-qr.svg') }}"
+          width="185" height="185" alt="Scan to open score.arborelia.net">
+        <span>score.arborelia.net</span>
+      </a>
       <div>
         <p class="eyebrow">TOURNAMENT {{ tournament_id }}</p>
         <h1><span class="heading-icon" aria-hidden="true">{{ tournament_icons.get(tournament_id, '🏆') }}</span> {{
