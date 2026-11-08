@@ -41,7 +41,8 @@
 
             <div class="refresh-controls" data-refresh-controls hidden><a class="framed-button event-display-link"
                     href="{{ url_for('render_monitor', tournament_id=tournament_id) }}"
-                    aria-label="Open monitor display">Monitor ↗</a><button class="text-button" type="button"
+                    aria-label="Open monitor display">Monitor ↗</a><a class="framed-button"
+                    href="{{ url_for('render_obs', tournament_id=tournament_id) }}">OBS ↗</a><button class="text-button" type="button"
                     data-refresh>↻ Refresh</button><button class="text-button" type="button" data-auto
                     aria-pressed="true">Auto: on</button></div>
         </div>

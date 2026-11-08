@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 
 from flask import abort, g, render_template, request, url_for
 
+from .broadcast import overlay_options, select_cards
 from .tournament import ARENAS, Card, SinglePlayerGame, creation_order
 
 EXAMPLE_ID = 25025
@@ -120,6 +121,8 @@ def example_url_for(endpoint, **values):
         "index": "example_cards",
         "render_ranking": "example_ranking",
         "render_monitor": "example_monitor",
+        "render_obs": "example_obs",
+        "render_overlay": "example_overlay",
         "render_player": "example_player",
         "render_machines": "example_machines",
         "render_how_it_works": "example_rules",
@@ -203,6 +206,28 @@ def register_examples(app):
     @app.route("/examples/machines/")
     def example_machines():
         return render("machines.html", arenas=ARENAS, active_tab="machines")
+
+    @app.route("/examples/obs/")
+    def example_obs():
+        return render("obs.html", title="25-player demo", active_tab="obs")
+
+    @app.route("/examples/overlay/")
+    def example_overlay():
+        options = overlay_options()
+        cards = [
+            *[
+                card
+                for card in example_standings()
+                if card.player_name != EXAMPLE_PLAYER
+            ],
+            *example_history(),
+        ]
+        return render(
+            "overlay.html",
+            title="25-player demo",
+            entries=select_cards(cards, options["mode"], options["count"]),
+            options=options,
+        )
 
     @app.route("/examples/how-it-works/")
     def example_rules():
